@@ -62,7 +62,7 @@ export default function Profile() {
       return;
     }
     loadData();
-  }, [token,posts]);
+  }, [token]);
 
   const loadComments = async () => {
     try {
@@ -319,7 +319,7 @@ export default function Profile() {
                       className={"text-primary fw-bold me-1"} 
                       onClick={() => handleLike(p.id)}
                     >
-                      <i className="fa-solid fa-eye"></i>  {p.view || 0}
+                      <i className="fa-solid fa-eye"></i>  {p.views || 0}
                     </button>{" "}
 
                   </div>

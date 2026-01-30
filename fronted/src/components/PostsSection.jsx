@@ -14,7 +14,7 @@ export default function PostsSection() {
         .then((res) => res.json())
         .then((data) => setPosts(data))
         .catch(console.error);
-    });
+    },[]);
 
 // Only Business category posts
 const businessPosts = posts.filter(

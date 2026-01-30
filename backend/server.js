@@ -1,3 +1,5 @@
+
+require("dotenv").config();
 var express = require("express");
 var db = require("./database/connection");
 var path = require("path");
@@ -21,11 +23,11 @@ const optionalAuth = require("./middleware/optionalAuth");
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-const SECRET_KEY = "super_secure_blog_secret_2026";
+// const SECRET_KEY = "super_secure_blog_secret_2026";
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: "*",
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -105,7 +107,7 @@ app.post("/login", (req, res) => {
         email:user.email,
         created_at:user.created_at,
       },
-      SECRET_KEY,
+      process.env.JWT_SECRET,
       { expiresIn: "1d" },
     );
 
@@ -291,7 +293,11 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: "Server error" });
 });
 
-app.listen(5000, () => {
-  console.log("express server running at http://localhost:5000/");
-});
-module.exports = SECRET_KEY;
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log("express server running at", PORT));
+
+
+// app.listen(5000, () => {
+//   console.log("express server running at http://localhost:5000/");
+// });
+// module.exports = SECRET_KEY;

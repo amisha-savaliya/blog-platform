@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const SECRET_KEY = "super_secure_blog_secret_2026";
+// const SECRET_KEY = "super_secure_blog_secret_2026";
 
 const optionalAuth = (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -14,7 +14,7 @@ const optionalAuth = (req, res, next) => {
     ? authHeader.split(" ")[1]
     : authHeader;
 
-  jwt.verify(token,SECRET_KEY, (err, decoded) => {
+  jwt.verify(token,process.env.JWT_SECRET, (err, decoded) => {
     if (err) {
       console.log("Invalid token, but continuing as guest");
       req.user = null;

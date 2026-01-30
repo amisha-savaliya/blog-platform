@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const SECRET_KEY = "super_secure_blog_secret_2026";
+// const SECRET_KEY = "super_secure_blog_secret_2026";
 
 const verifyToken = (req, res, next) => {
   const header = req.headers.authorization;
@@ -14,7 +14,7 @@ const verifyToken = (req, res, next) => {
 
   const token = header.split(" ")[1];
 
-  jwt.verify(token, SECRET_KEY, (err, decoded) => {
+  jwt.verify(token,process.env.JWT_SECRET, (err, decoded) => {
     if (err) {
       return res.status(401).json({ msg: "Invalid or expired token" });
     }

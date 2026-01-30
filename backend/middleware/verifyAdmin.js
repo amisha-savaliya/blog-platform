@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const SECRET_KEY = "super_secure_blog_secret_2026";
+// const SECRET_KEY = "super_secure_blog_secret_2026";
 
 const verifyAdmin = (req, res, next) => {
   const header = req.headers.authorization;
@@ -13,7 +13,7 @@ const verifyAdmin = (req, res, next) => {
   const token = header.split(" ")[1];
 
   try {
-    const decoded = jwt.verify(token, SECRET_KEY);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.admin = decoded;
 
     const isAdmin = decoded.role === "admin" || decoded.role_id === 2;
