@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Addpost from "./Addpost";
 import { useCategories } from "../context/Categorycontext";
-import AllCommentsModal from "../admin/pages/AllCommentModel";
+import CommentsModal from "../components/CommentModel";
+import { useAuth } from "../context/Authcontext";
 
 export default function BlogPage() {
   const navigate = useNavigate();
@@ -10,109 +11,76 @@ export default function BlogPage() {
   const normalToken = localStorage.getItem("token");
   const token = impersonationToken || normalToken;
   const isImpersonating = sessionStorage.getItem("isImpersonating") === "true";
+  const { user } = useAuth();
   const { categories } = useCategories();
   const [posts, setPosts] = useState([]);
-  const [comments, setComments] = useState({});
+
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [showForm, setShowForm] = useState(false);
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState(search);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 300); // wait 300ms after user stops typing
+
+    return () => clearTimeout(timer);
+  }, [search]);
   const [selectedCategory, setSelectedCategory] = useState("");
-  const [commentText, setCommentText] = useState({});
+
   const limit = 6;
   const [showModal, setShowModal] = useState(false);
   const [activePostId, setActivePostId] = useState(null);
+
   const openComments = (postId) => {
     setActivePostId(postId);
     setShowModal(true);
-    loadComments();
   };
+
   const closeComments = () => {
     setShowModal(false);
     setActivePostId(null);
   };
 
-  const loadComments = async () => {
-    try {
-      const res = await fetch("http://localhost:5000/comment", {
-        headers: { Authorization: "Bearer " + token },
-      });
-
-      const commentData = await res.json();
-
-      const grouped = {};
-      commentData.forEach((c) => {
-        if (!grouped[c.post_id]) grouped[c.post_id] = [];
-        grouped[c.post_id].push(c);
-      });
-
-      setComments(grouped);
-    } catch (err) {
-      console.error("Load comments failed:", err);
-    }
-  };
-  useEffect(() => {
-    if (token) {
-      loadComments();
-    }
-  }, [token]);
-
-  const addComment = async (postId) => {
-    const text = commentText[postId];
-    if (!text) return;
-
-    const res = await fetch("http://localhost:5000/comment/add", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + token,
-      },
-      body: JSON.stringify({ post_id: postId, comment: text }),
-    });
-
-    await res.json();
-    alert("comment added ");
-    setCommentText((prev) => ({ ...prev, [postId]: "" }));
-    loadComments();
-  };
-
   /* RESET PAGE */
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, selectedCategory]);
+  }, [debouncedSearch, selectedCategory]);
 
-  /* - FETCH POSTS*/
-  useEffect(() => {
-    const options = token
-      ? { headers: { Authorization: "Bearer " + token } }
-      : {};
+ useEffect(() => {
+  const options = token
+    ? { headers: { Authorization: "Bearer " + token } }
+    : {};
 
-    let url = `http://localhost:5000/allpost?page=${currentPage}&limit=${limit}`;
+  let url = `http://localhost:5000/allpost?page=${currentPage}&limit=${limit}`;
 
-    if (selectedCategory) {
-      url += `&category=${selectedCategory}`;
-    }
+  if (selectedCategory) {
+    url += `&category=${selectedCategory}`;
+  }
 
-    if (search) {
-      url += `&search=${search}`;
-    }
+  // ✅ ONLY search when 3+ characters
+  if (debouncedSearch.trim().length >= 3) {
+    url += `&search=${encodeURIComponent(debouncedSearch.trim())}`;
+  }
 
-    fetch(url, options)
-      .then((res) => res.json())
-      .then((data) => {
-        setPosts(data.post || []);
-        setTotalPages(data.totalPages || 1);
-      })
-      .catch(console.error);
-  }, [currentPage, selectedCategory, search, token]);
+  fetch(url, options)
+    .then((res) => res.json())
+    .then((data) => {
+      setPosts(data.post || []);
+      setTotalPages(data.totalPages || 1);
+    })
+    .catch(console.error);
+}, [currentPage, selectedCategory, debouncedSearch, token]);
 
   /* --SEARCH HIGHLIGHT --- */
   const SearchHighlight = (text = "") => {
-    if (!search) return text;
+    if (!debouncedSearch || debouncedSearch.length < 3) return text;
 
-    const regex = new RegExp(`(${search})`, "gi");
+    const regex = new RegExp(`(${debouncedSearch})`, "gi");
     return text.split(regex).map((part, i) =>
-      part.toLowerCase() === search.toLowerCase() ? (
+      part.toLowerCase() === debouncedSearch.toLowerCase() ? (
         <mark className="bg-warning" key={i}>
           {part}
         </mark>
@@ -169,8 +137,8 @@ export default function BlogPage() {
                     onChange={(e) => setSelectedCategory(e.target.value)}
                   >
                     <option value="">All Categories</option>
-                    {categories.map((c, i) => (
-                      <option key={i} value={c.name}>
+                    {categories.map((c) => (
+                      <option key={c.id} value={c.name}>
                         {c.name}
                       </option>
                     ))}
@@ -238,13 +206,13 @@ export default function BlogPage() {
                   </small>
 
                   <button
-                    className="btn btn-outline-primary mt-2"
+                    className="btn btn-outline-primary mt-2 mb-2"
                     onClick={() => navigate(`/post/${p.slug}`)}
                   >
                     Read More →
                   </button>
                   {token || impersonationToken ? (
-                    <div className=" card-footer d-flex gap-4 align-items-center mt-3  ">
+                    <div className=" card-footer d-flex gap-4 align-items-center mt-3  mb-2 fs-6 ">
                       <button
                         className={p.userLiked ? "text-danger" : "text-muted"}
                         onClick={() => handleLike(p.id)}
@@ -300,13 +268,12 @@ export default function BlogPage() {
             onClose={() => setShowForm(false)}
           />
         )}
-
-        <AllCommentsModal
-          showModal={showModal}
-          closeComments={closeComments}
-          comments={comments}
-          activePostId={activePostId}
-          formattedDate={formattedDate}
+        <CommentsModal
+          postId={activePostId}
+          token={token}
+          currentUser={user}
+          show={showModal}
+          onClose={closeComments}
         />
       </div>
     </>

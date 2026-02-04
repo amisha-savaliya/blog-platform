@@ -37,10 +37,10 @@ export default function Settings() {
   };
 
   return (
-    <div className="container mt-4">
-      <h3>Blog Settings</h3>
+    <div className="container mt-5 py-5">
+      <h3 className="heading text-primary fw-bold">Blog Settings</h3>
 
-      <div className="card p-4 shadow-sm">
+      <div className="card p-4 shadow-sm mt-4">
         <label>Admin Email</label>
         <input
           className="form-control mb-3"

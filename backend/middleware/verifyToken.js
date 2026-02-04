@@ -1,8 +1,10 @@
 const jwt = require("jsonwebtoken");
-// const SECRET_KEY = "super_secure_blog_secret_2026";
+
 
 const verifyToken = (req, res, next) => {
   const header = req.headers.authorization;
+  // console.log("AUTH HEADER:", req.headers.authorization);
+
 
   if (!header) {
     return res.status(401).json({ msg: "No token provided" });

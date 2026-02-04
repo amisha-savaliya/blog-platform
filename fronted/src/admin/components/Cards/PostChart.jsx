@@ -1,56 +1,70 @@
 import { Bar } from "react-chartjs-2";
 import { Chart as ChartJS } from "chart.js/auto";
-import { useCategories } from "../../../context/Categorycontext";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useCategories } from "../../../context/Categorycontext";
 
 export default function PostChart() {
-  const [posts, setPosts] = useState([]);
-  const { categories } = useCategories();
+  const [chartStats, setChartStats] = useState([]);
+  const [totalPosts, setTotalPosts] = useState(0);
+  const [range, setRange] = useState("all"); // 7 | 30 | all
   const token = localStorage.getItem("admintoken");
+  const { categories } =useCategories();
   const navigate = useNavigate();
 
   useEffect(() => {
     if (!token) return navigate("/admin/login");
 
-    fetch("http://localhost:5000/posts/get", {
-      method:"POST",
+    fetch(`http://localhost:5000/posts/get?range=${range}`, {
+      method: "POST",
       headers: { Authorization: "Bearer " + token },
     })
-      .then(res => res.json())
-      .then(data => setPosts(data))
+      .then((res) => res.json())
+      .then((data) => {
+        setChartStats(data.chartStats || []);
+        setTotalPosts(data.posts?.length || 0);
+      })
       .catch(console.error);
-  }, [token, navigate]);   
+  }, [range, token, navigate]);
 
-  // Extract category names
-  const labels = categories.map(cat => cat.name);
+  const labels = categories.map(c => c.name);
 
-  // Count posts for each category
-  const postCounts = categories.map(c =>
-    posts.filter(post => post.category === c.name).length
-  );
-  const totalPosts=posts.length;
+const counts = categories.map(cat => {
+  const found = chartStats.find(s => s.name === cat.name);
+  return found ? found.total : 0; // zero if no posts
+});
 
-  const data = {
+
+  const chartData = {
     labels,
     datasets: [
       {
         label: "Posts",
-        data: postCounts,
+        data: counts,
         backgroundColor: "rgba(59,130,246,0.7)",
       },
     ],
   };
 
   return (
-     <div className="card shadow-lg p-4 mt-4 rounded">
+    <div className="card shadow-lg p-4 mt-4 rounded">
       <div className="d-flex justify-content-between align-items-center mb-3">
         <h4 className="fw-semibold">Posts by Category</h4>
-        <span className="badge bg-primary fs-6">
-          Total Posts: {totalPosts}
-        </span>
+
+        <div className="flex gap-2">
+          <button onClick={() => setRange("7")} className="btn btn-sm btn-outline-primary">7 Days</button>
+          <button onClick={() => setRange("30")} className="btn btn-sm btn-outline-primary">30 Days</button>
+          <button onClick={() => setRange("all")} className="btn btn-sm btn-outline-primary">All</button>
+        </div>
+        
       </div>
-      <Bar data={data} />
+      <span className="badge bg-primary fs-6 mb-2 me-0 w-25">
+        Total Posts: {totalPosts}
+      </span>
+
+      
+
+      <Bar data={chartData} />
     </div>
   );
 }

@@ -73,10 +73,10 @@ export default function ManageRole() {
 };
 
   return (
-    <div className="container py-5">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h3>Manage Roles</h3>
-        <button className="btn btn-primary" onClick={() => setShowForm(true)}>
+    <div className="container py-5 mt-24">
+      <div className="d-flex justify-content-between text-primary fw-semibold align-items-center mb-4">
+        <h3 className="heading text-primary fw-bold">Manage Roles</h3>
+        <button className="btn btn-primary " onClick={() => setShowForm(true)}>
           + Add Role
         </button>
       </div>

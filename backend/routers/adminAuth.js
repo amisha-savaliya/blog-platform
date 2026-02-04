@@ -10,7 +10,7 @@ const SECRET_KEY = "super_secure_blog_secret_2026";
 // routes/adminAuth.js
 router.post("/login", (req, res) => {
   const { email, password } = req.body;
-  console.log(req.body);
+  
 
   const sql = `
     SELECT * FROM users 

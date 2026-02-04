@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import ViewPost from "./Viewpost";
 
-export default function Users({ users }) {
+export default function Users() {
   const navigate = useNavigate();
   const [usersList, setUsersList] = useState([]);
+  const [search, setSearch] = useState("");
   const token = localStorage.getItem("admintoken");
 
   const fetchUsers = async () => {
@@ -14,8 +14,8 @@ export default function Users({ users }) {
       });
 
       if (res.status === 401 || res.status === 403) {
-        localStorage.removeItem("token");
-        navigate("/login");
+        localStorage.removeItem("admintoken");
+        navigate("/admin/login");
         return;
       }
 
@@ -27,19 +27,17 @@ export default function Users({ users }) {
   };
 
   useEffect(() => {
+    if (!token) return navigate("/admin/login");
     fetchUsers();
-  }, []);
+  }, [token]);
 
   const deleteUser = async (id) => {
-    if (!window.confirm("Are you sure to delete?")) return;
-
-    await fetch(`http://localhost:5000/users/${id}`, {
+    if (!window.confirm("Delete this user?")) return;
+    const res = await fetch(`http://localhost:5000/users/${id}`, {
       method: "DELETE",
       headers: { Authorization: "Bearer " + token },
     });
-
-    setUsersList((prev) => prev.filter((u) => u.id !== id));
-    alert("User deleted");
+    if (res.ok) fetchUsers();
   };
 
   const blockUser = async (id) => {
@@ -57,18 +55,8 @@ export default function Users({ users }) {
     });
     fetchUsers();
   };
-  const formattedDate = (date) =>
-    new Date(date).toLocaleString("en-IN", {
-      day: "2-digit",
-      month: "short",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      hour12: true,
-    });
 
-  const loginAsUSer = async (id) => {
+  const loginAsUser = async (id) => {
     const res = await fetch(`http://localhost:5000/impersonate/${id}`, {
       method: "POST",
       headers: {
@@ -78,69 +66,120 @@ export default function Users({ users }) {
     });
 
     const data = await res.json();
-
-    // console.log(id);
-
     sessionStorage.setItem("impersonationToken", data.token);
     sessionStorage.setItem("isImpersonating", "true");
     localStorage.setItem("impersonate_user", JSON.stringify(data.user));
-    // console.log(data.user);
-
     window.open("/profile", "_blank");
-    // window.location.href = "/profile";
-
   };
 
-  return (
-    <div className="container section">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2 className="heading text-primary">Total Users</h2>
-        <button
-          className="btn btn-primary"
-          onClick={() => navigate("/admin/adduser")}
-        >
-          + Add User
-        </button>
-      </div>
+  const formattedDate = (date) =>
+    new Date(date).toLocaleDateString("en-IN", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
 
-      <div className="overflow-x-auto">
-        <table className="min-w-full border">
-          {/* <thead className="bg-blueGray-100"> */}
-          <thead>
+  const filteredUsers = usersList.filter(
+    (u) =>
+      u.name.toLowerCase().includes(search.toLowerCase()) ||
+      u.email.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <div className="container py-24 mt-4">
+
+ {/* HEADER */}
+<div className="bg-white p-4 shadow-sm rounded mb-4 d-flex justify-content-between align-items-center flex-wrap">
+
+  {/* LEFT SIDE */}
+  <h4 className="fw-bold m-0 text-primary-emphasis">
+    👥 Users Management
+  </h4>
+
+  {/* RIGHT SIDE */}
+  <div className="d-flex align-items-center gap-3">
+
+    <input
+      type="text"
+      className="form-control"
+      placeholder="🔍 Search by name or email..."
+      value={search}
+      onChange={(e) => setSearch(e.target.value)}
+      style={{ width: "250px" }}
+    />
+
+    <button
+      className="btn btn-primary px-4"
+      onClick={() => navigate("/admin/adduser")}
+    >
+      + Add User
+    </button>
+
+  </div>
+</div>
+
+   
+
+      {/* TABLE */}
+      <div className="bg-white shadow-sm rounded overflow-hidden">
+        <table className="table align-middle table-hover m-0">
+          <thead className="table-light">
             <tr>
-              <th className="border px-4 py-2">ID</th>
-              <th className="border px-4 py-2">Name</th>
-              <th className="border px-4 py-2">Email</th>
-              <th className="border px-4 py-2">Joining at</th>
-              <th className="border px-4 py-2">Role</th>
-              <th className="border px-4 py-2">Status</th>
-              <th className="border px-4 py-2">Action</th>
+              <th>User</th>
+              <th>Email</th>
+              <th>Joined</th>
+              <th>Role</th>
+              <th>Status</th>
+              <th className="text-end">Actions</th>
             </tr>
           </thead>
-
           <tbody>
-            {usersList.length === 0 ? (
+            {filteredUsers.length === 0 ? (
               <tr>
-                <td colSpan="7" className="text-center py-4 text-gray-500">
-                  No users found.
+                <td colSpan="6" className="text-center py-4 text-muted">
+                  No users found
                 </td>
               </tr>
             ) : (
-              usersList.map((u) => (
-                <tr key={u.id} className={u.is_blocked ? "opacity-50" : ""}>
-                  <td className="border px-4 py-2">{u.id}</td>
-                  <td className="border px-4 py-2">{u.name}</td>
-                  <td className="border px-4 py-2">{u.email}</td>
-                  <td className="border px-4 py-2">
-                    {formattedDate(u.created_at)}
+              filteredUsers.map((u) => (
+                <tr key={u.id} className={u.is_blocked ? "table-danger" : ""}>
+
+                  {/* USER */}
+                  <td className="d-flex align-items-center gap-3">
+                    <div
+                      className="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold"
+                      style={{ width: 38, height: 38 }}
+                    >
+                      {u.name?.charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <div className="fw-semibold">{u.name}</div>
+                      <small className="text-muted">ID: {u.id}</small>
+                    </div>
                   </td>
-                  <td className="border px-4 py-2">{u.role_id}</td>
-                  <td className="border px-4 py-2">
-                    {u.is_blocked ? "Blocked" : "Active"}
+
+                  <td>{u.email}</td>
+                  <td>{formattedDate(u.created_at)}</td>
+                  <td>Role {u.role_id}</td>
+
+                  {/* STATUS */}
+                  <td>
+                    {u.is_blocked ? (
+                      <span className="badge bg-danger-subtle text-danger px-3 py-2">
+                        🔒 Blocked
+                      </span>
+                    ) : (
+                      <span className="badge bg-success-subtle text-success px-3 py-2">
+                        🟢 Active
+                      </span>
+                    )}
                   </td>
-                  <td className="border px-4 py-2 gap-3">
+
+                  {/* ACTIONS */}
+                  <td className="text-end text-nowrap">
                     <button
-                      className="btn btn-info me-2"
+                      className="btn btn-sm btn-outline-primary me-1"
+                      title="View Posts"
                       onClick={() =>
                         navigate("/admin/user-posts", {
                           state: { userId: u.id, userName: u.name },
@@ -149,8 +188,10 @@ export default function Users({ users }) {
                     >
                       <i className="fa fa-eye"></i>
                     </button>
+
                     <button
-                      className="btn btn-primary me-2"
+                      className="btn btn-sm btn-outline-secondary me-1"
+                      title="Edit User"
                       onClick={() =>
                         navigate("/admin/user-edit", {
                           state: {
@@ -161,10 +202,12 @@ export default function Users({ users }) {
                         })
                       }
                     >
-                      <i className="fa-solid fa-pen"></i>
+                      <i className="fa fa-pen"></i>
                     </button>
+
                     <button
-                      className="btn btn-sm btn-danger me-2"
+                      className="btn btn-sm btn-outline-danger me-1"
+                      title="Delete"
                       onClick={() => deleteUser(u.id)}
                     >
                       <i className="fa fa-trash"></i>
@@ -172,27 +215,31 @@ export default function Users({ users }) {
 
                     {u.is_blocked ? (
                       <button
-                        className="btn btn-sm btn-outline-success me-2"
+                        className="btn btn-sm btn-outline-success me-1"
+                        title="Unblock"
                         onClick={() => unblockUser(u.id)}
                       >
-                        <i className="fa-solid fa-lock-open"></i>
+                        <i className="fa fa-lock-open"></i>
                       </button>
                     ) : (
                       <button
-                        className="btn btn-sm btn-warning me-2"
+                        className="btn btn-sm btn-outline-warning me-1"
+                        title="Block"
                         onClick={() => blockUser(u.id)}
                       >
-                        <i className="fa-solid fa-ban"></i>
+                        <i className="fa fa-ban"></i>
                       </button>
                     )}
 
                     <button
-                      className="btn btn-sm btn-secondary me-2"
-                      onClick={() => loginAsUSer(u.id)}
+                      className="btn btn-sm btn-outline-dark"
+                      title="Login as user"
+                      onClick={() => loginAsUser(u.id)}
                     >
-                      <i className="fa-regular fa-address-card"></i>
+                    <i className="fa-regular fa-address-card"></i>
                     </button>
                   </td>
+
                 </tr>
               ))
             )}

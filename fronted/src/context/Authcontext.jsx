@@ -8,8 +8,7 @@ export const AuthProvider = ({ children }) => {
   const token = localStorage.getItem("token");
   const impersonateToken=sessionStorage.getItem("impersonationToken")
   const activeToken=impersonateToken || token
-
-
+ 
 useEffect(() => {
 
 
@@ -27,17 +26,15 @@ useEffect(() => {
 
 
 
-
-
-
   const logout = () => {
     fetch("http://localhost:5000/logout", {
-      headers: { Authorization: "Bearer " + token },
+      headers: { Authorization: "Bearer " + activeToken },
     })
       .finally(() => {
         localStorage.removeItem("token");
          localStorage.removeItem("impersonationToken")
         setUser(null);
+        window.location.href = "/login";
       });
   };
 

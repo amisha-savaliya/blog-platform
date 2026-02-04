@@ -9,8 +9,9 @@ const cleanSlug = slug?.replace(/}:$/, "");
 
   const navigate = useNavigate();
   const { categories } = useCategories();
-  const token = localStorage.getItem("token");
-
+  const impersonationToken = sessionStorage.getItem("impersonationToken");
+   const normaToken = localStorage.getItem("token");
+  const token = impersonationToken || normaToken;
   const [form, setForm] = useState(null);
   const [postId, setPostId] = useState(null);
   const [slugPreview, setSlugPreview] = useState("");
@@ -27,14 +28,16 @@ function slugify(value) {
 
  useEffect(() => {
   if (!slug) return; 
-  // console.log(slug)
 
   fetch(`http://localhost:5000/posts/slug/${cleanSlug}`, {
     headers: { Authorization: "Bearer " + token }
   })
     .then(res => res.json())
     .then(data => {
-      setForm(data);
+      setForm({
+          ...data,
+          category: Number(data.category_id || data.category),
+        });
       setPostId(data.id);
       setSlugPreview(data.slug);
     })
@@ -98,6 +101,11 @@ function slugify(value) {
 
   if (!form) return <div className="container mt-5">Loading...</div>;
 
+  const selectedCategory = categories.find(
+  c => Number(c.id) === Number(form.category)
+);
+
+
   return (
     <div className="container mt-5">
       <div className="card p-4 shadow">
@@ -138,12 +146,17 @@ function slugify(value) {
           required
           onChange={e => setForm({ ...form, category: e.target.value })}
         >
-          {categories.map(c => (
+           <option value="">-- Select Category --</option>
+          {categories.map((c) => (
             <option key={c.id} value={c.id}>
               {c.name}
             </option>
           ))}
         </select>
+        <small className="text-muted mb-2">
+  Select category : <strong>{selectedCategory?.name || "None"}</strong>
+</small>
+
 
         <textarea
           className="form-control my-2"

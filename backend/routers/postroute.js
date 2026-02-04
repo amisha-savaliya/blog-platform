@@ -83,7 +83,7 @@ router.get("/", verifyToken, (req, res) => {
   const offset = (page - 1) * limit;
   const search = req.query.search || "";
   const userId = req.query.userId;
-  const loggedUserId=req.user.id;
+  const loggedUserId = req.user.id;
 
   let whereConditions = ["post.is_delete = 0"];
 
@@ -102,7 +102,6 @@ router.get("/", verifyToken, (req, res) => {
   // filter posts of logged-in user
   if (userId) {
     whereConditions.push(`post.user_id = ${userId}`);
-    
   }
 
   const whereClause =
@@ -142,7 +141,7 @@ router.get("/", verifyToken, (req, res) => {
       LIMIT ? OFFSET ?
     `;
 
-    db.query(dataSql, [...values,loggedUserId,limit, offset], (err, data) => {
+    db.query(dataSql, [...values, loggedUserId, limit, offset], (err, data) => {
       if (err) return res.status(500).json(err);
 
       res.json({
@@ -154,23 +153,52 @@ router.get("/", verifyToken, (req, res) => {
     });
   });
 });
-
 router.post("/get", verifyToken, (req, res) => {
-    const loggedUserId=req.user.id;
-  const sql = `SELECT  post.* ,  users.name AS author,  
-  categories.name AS category,
-  (SELECT COUNT(*) FROM post_view WHERE post_id = post.id) AS views,
-  (SELECT 1 FROM post_likes  WHERE post_id = post.id AND user_id = ?) AS userLiked,
-  (SELECT COUNT(*) FROM post_likes WHERE post_id = post.id) AS totalLikes,
-  (SELECT COUNT(*) FROM comments WHERE post_id = post.id AND is_delete = 0) AS commentCount
-   FROM post 
-   LEFT JOIN users ON post.user_id = 
-  users.id LEFT JOIN categories ON post.cat_id = categories.id 
-  WHERE post.is_delete=0`;
+  const loggedUserId = req.user.id;
+  const range = req.query.range || "all"; //  filter from frontend
 
-  db.query(sql,loggedUserId, (err, data) => {
+  let dateFilter = "";
+
+  if (range === "7") {
+    dateFilter = "AND post.created_at >= NOW() - INTERVAL 7 DAY";
+  } else if (range === "30") {
+    dateFilter = "AND post.created_at >= NOW() - INTERVAL 30 DAY";
+  }
+
+  // 🔹 POSTS QUERY
+  const postSql = `
+    SELECT post.*, users.name AS author, categories.name AS category,
+      (SELECT COUNT(*) FROM post_view WHERE post_id = post.id) AS views,
+      (SELECT 1 FROM post_likes WHERE post_id = post.id AND user_id = ?) AS userLiked,
+      (SELECT COUNT(*) FROM post_likes WHERE post_id = post.id) AS totalLikes,
+      (SELECT COUNT(*) FROM comments WHERE post_id = post.id AND is_delete = 0) AS commentCount
+    FROM post
+    LEFT JOIN users ON post.user_id = users.id
+    LEFT JOIN categories ON post.cat_id = categories.id
+    WHERE post.is_delete = 0
+    ORDER BY post.id DESC
+  `;
+
+  // 🔹 CHART QUERY
+  const chartSql = `
+    SELECT categories.name, COUNT(post.id) AS total
+    FROM post
+    LEFT JOIN categories ON post.cat_id = categories.id
+    WHERE post.is_delete = 0 ${dateFilter}
+    GROUP BY categories.name
+  `;
+
+  db.query(postSql, [loggedUserId], (err, posts) => {
     if (err) return res.status(500).json(err);
-    res.json(data);
+
+    db.query(chartSql, (err, chartStats) => {
+      if (err) return res.status(500).json(err);
+
+      res.json({
+        posts,
+        chartStats,
+      });
+    });
   });
 });
 
@@ -197,7 +225,7 @@ router.post("/add", verifyToken, async (req, res) => {
 //view selected post
 router.get("/slug/:slug", verifyToken, (req, res) => {
   const { slug } = req.params;
-  console.log(slug);
+  // console.log(slug);
 
   const postSql = `
     SELECT 
@@ -216,40 +244,39 @@ router.get("/slug/:slug", verifyToken, (req, res) => {
   db.query(postSql, [slug], (err, posts) => {
     if (err) return res.status(500).json({ error: "Server error" });
     if (!posts.length) return res.status(404).json({ msg: "Post not found" });
-    console.log(posts[0]);
-
+    // console.log(posts[0]);
     res.json(posts[0]);
   });
 });
 
-
-//edit post
 router.put("/update/:id", verifyToken, (req, res) => {
-  const { id } = req.params;
+  const postId = req.params.id;
+  const userId = req.user.impersonatedUserId || req.user.id;
+
   const { title, content, category, image, slug } = req.body;
 
   if (!title || !content || !slug || !category || !image) {
     return res.status(400).json({ message: "All fields are required" });
   }
 
-  const newSlug = CreateSlug(title);
-
   const sql = `
     UPDATE post 
     SET title = ?, content = ?, cat_id = ?, image = ?, slug = ?
-    WHERE id = ?
+    WHERE id = ? AND user_id = ?
   `;
 
-  db.query(sql, [title, content, category, image, slug, id], (err, result) => {
-    if (err) {
-      //  console.error("SQL ERROR:", err);
-      return res.status(500).json({ msg: err.message });
-    }
-    if (!result.affectedRows)
-      return res.status(404).json({ msg: "Post not found" });
+  db.query(
+    sql,
+    [title, content, category, image, slug, postId, userId],
+    (err, result) => {
+      if (err) return res.status(500).json({ msg: err.message });
 
-    res.json({ msg: "Updated", slug: newSlug });
-  });
+      if (!result.affectedRows)
+        return res.status(403).json({ msg: "Not allowed or post not found" });
+
+      res.json({ msg: "Updated" });
+    },
+  );
 });
 
 //delete post

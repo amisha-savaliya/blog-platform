@@ -9,8 +9,7 @@ import Contact from "./Contact";
 export default function Home() {
   return (
     <>
-      {/* <Navbar /> */}
-      {/* <HeroPosts /> */}
+    
       <RetroSection />
       <PostsSection />
       <About />

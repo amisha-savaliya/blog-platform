@@ -10,14 +10,25 @@ export default function Posts() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-
   const [searchParams] = useSearchParams();
   const searchQuery = searchParams.get("search") || "";
+  const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 100); // wait 500ms after user stops typing
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   const token = localStorage.getItem("admintoken");
+  useEffect(() => {
+    if (!token) return;
+  },[]);
   const limit = 6;
 
-  // const [comments, setComments] = useState([]);
+
 
   const [showComments, setShowComments] = useState(false);
   const [selectedPostId, setSelectedPostId] = useState(null);
@@ -26,7 +37,7 @@ export default function Posts() {
 
   const openComments = async (postId) => {
     setSelectedPostId(postId);
-    
+
     const res = await fetch(`http://localhost:5000/comment?post_id=${postId}`, {
       headers: {
         Authorization: "Bearer " + token,
@@ -53,51 +64,32 @@ export default function Posts() {
           ? {
               ...p,
               userLiked: data.liked ? 1 : 0,
-              totalLikes: data.liked ? p.totalLikes + 1 : p.totalLikes - 1,
+              totalLikes: data.liked
+                ? p.totalLikes + 1
+                : Math.max(0, p.totalLikes - 1),
             }
           : p,
       ),
     );
   };
 
-  const loadComments = async () => {
-    try {
-      const res = await fetch("http://localhost:5000/comment", {
-        headers: { Authorization: "Bearer " + token },
-      });
-
-      const commentData = await res.json();
-
-      const grouped = {};
-      commentData.forEach((c) => {
-        if (!grouped[c.post_id]) grouped[c.post_id] = [];
-        grouped[c.post_id].push(c);
-      });
-
-      setComments(grouped);
-    } catch (err) {
-      console.error("Load comments failed:", err);
-    }
-  };
-  useEffect(() => {
-    loadComments();
-  }, []);
-
   // Reset page when search changes
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery]);
 
-  //  Fetch posts with search + pagination
-  useEffect(() => {
+useEffect(() => {
+  if (debouncedSearch && debouncedSearch.length < 3) {
+  
+    return;
+  }
+
     fetch(
       `http://localhost:5000/posts?search=${encodeURIComponent(
-        searchQuery,
+        debouncedSearch,
       )}&page=${currentPage}&limit=${limit}`,
       {
-        headers: {
-          Authorization: "Bearer " + token,
-        },
+        headers: { Authorization: "Bearer " + token },
       },
     )
       .then((res) => res.json())
@@ -106,7 +98,7 @@ export default function Posts() {
         setTotalPages(data.totalPages || 1);
       })
       .catch(console.error);
-  }, [searchQuery, currentPage, token]);
+  }, [debouncedSearch, currentPage, token]);
 
   const removePost = async (slug) => {
     if (!window.confirm("Are you sure you want to delete this post?")) return;
@@ -132,23 +124,21 @@ export default function Posts() {
       year: "numeric",
       hour12: true,
     });
+const SearchHighlight = (text) => {
+  if (!debouncedSearch || debouncedSearch.length < 3) return text;
 
-  const SearchHighlight = (text) => {
-    if (!searchQuery) return text;
+  const regex = new RegExp(`(${debouncedSearch})`, "gi");
+  return text.split(regex).map((part, i) =>
+    part.toLowerCase() === debouncedSearch.toLowerCase() ? (
+      <mark key={i} style={{ backgroundColor: "yellow", fontWeight: "bold" }}>
+        {part}
+      </mark>
+    ) : (
+      part
+    )
+  );
+};
 
-    const regex = new RegExp(`(${searchQuery})`, "gi");
-    const parts = text.split(regex);
-
-    return parts.map((part, i) =>
-      part.toLowerCase() === searchQuery.toLowerCase() ? (
-        <mark key={i} style={{ backgroundColor: "yellow", fontWeight: "bold" }}>
-          {part}
-        </mark>
-      ) : (
-        part
-      ),
-    );
-  };
 
   const addComment = async (text) => {
     const res = await fetch("http://localhost:5000/comment/add", {
@@ -190,13 +180,13 @@ export default function Posts() {
       body: JSON.stringify({ comment: newText }),
     });
 
-      setModalComments((prev) =>
+    setModalComments((prev) =>
       prev.map((c) => (c.id === id ? { ...c, comment: newText } : c)),
     );
   };
 
   return (
-    <div className="container section">
+    <div className="container section py-5 mt-24">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2 className="heading text-primary">Blog Posts</h2>
 
@@ -227,7 +217,7 @@ export default function Posts() {
                 src={post.image}
                 className="img-fluid mb-3 rounded"
                 alt=""
-                style={{ height: "250px", width: "400px" }}
+                style={{ height: "250px", width: "100%", objectFit: "cover" }}
               />
 
               <h4>{SearchHighlight(post.title)}</h4>
@@ -241,7 +231,7 @@ export default function Posts() {
               </span>
 
               <p className="mt-2">
-                {SearchHighlight(post.content.substring(0, 100))}...
+                {SearchHighlight((post.content || "").substring(0, 100))}...
               </p>
 
               <div className="d-flex align-items-center gap-2 mt-3 mb-2">
@@ -271,22 +261,20 @@ export default function Posts() {
                 </small>
               </div>
               {/* card footer*/}
-              <div className=" card-footer d-flex gap-2 align-items-center mt-1 mb-0">
+              <div className=" card-footer d-flex gap-4 align-items-center mt-4 mb-3 fs-6">
                 <button
-                  className={
-                    post.userLiked ? "text-danger fs-6" : "text-muted fs-6"
-                  }
+                  className={post.userLiked ? "text-danger " : "text-muted "}
                   onClick={() => handleLike(post.id)}
                 >
                   {post.userLiked ? "❤️ " : "🤍 "} {post.totalLikes || 0}
                 </button>
                 <button
-                  className="btn btn-outline-none fs-6"
+                  className="text-black fs-50"
                   onClick={() => openComments(post.id)}
                 >
                   <i className="fa-regular fa-comment"></i> {post.commentCount}
-                </button>{" "}
-                <button className="btn btn-outline-none fs-6">
+                </button>
+                <button className={"text-primary fw-bold me-1"}>
                   <i className="fa fa-eye"></i> {post.views}
                 </button>
               </div>

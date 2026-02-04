@@ -116,10 +116,12 @@ const editCategory = async () => {
 
 
   return (
-    <div className="container py-5">
+    // <div className="container py-5 mt-5">
+    <div className="max-w-6xl mx-auto px-6 py-10 mt-24 container">
+
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-semibold text-blueGray-700">Categories</h2>
+      <div className="flex justify-between items-center  mb-8">
+        <h2 className=" heading text-primary fw-bold">Categories</h2>
         <button
           onClick={() => setShowForm(true)}
           className="bg-primary text-white px-4 py-2 rounded hover:bg-indigo-700 transition"
@@ -130,7 +132,7 @@ const editCategory = async () => {
 
       {showForm && (
         <div className="mb-6 border rounded p-4 bg-blueGray-50">
-          <h3 className="font-semibold mb-3">Add New Category</h3>
+          <h3 className="font-semibold mb-3 text-text-black-50">Add New Category</h3>
 
           <div className="flex gap-3">
             <input
@@ -156,30 +158,32 @@ const editCategory = async () => {
         </div>
       )}
 
-      <div className="overflow-x-auto">
-        <table className="min-w-full border">
-          <thead className="bg-blueGray-100">
+      {/* <div className="overflow-x-auto"> */}
+      
+          <div className=" rounded-xl shadow-md overflow-hidden border">
+    <table className="table hover bg-white shadow-sm rounded  w-full border">
+      <thead className="text-gray uppercase py-2 fw-semibold justify-content-center text-center">
             <tr>
               <th className="px-4 py-2 border">ID</th>
               <th className="px-4 py-2 border">Category</th>
 
               <th className="px-4 py-2 border">Created</th>
-              {/* <th className="px-4 py-2 border">Updated</th> */}
+              <th className="px-4 py-2 border">Posts</th>
               <th className="px-4 py-2 border">Action</th>
             </tr>
           </thead>
 
           <tbody>
             {categories.map((cat) => (
-              <tr key={cat.id} className="text-center">
+              <tr key={cat.id} className=" py-4  justify-content-center text-center ">
                 <td className="border px-4 py-2">{cat.id}</td>
                 <td className="border px-4 py-2 font-medium">{cat.name}</td>
 
                 <td className="border px-4 py-2 text-sm">{formattedDate(cat.created_at)}</td>
-                {/* <td className="border px-4 py-2 text-sm">{formattedDate(cat.updated_at)}</td> */}
-                <td className="border px-4 py-2">
+                <td className="border px-4 py-2 text-sm">{cat.posts || 0}</td>
+                <td className="border px-4 py-2 ">
                   <button
-                    className="btn btn-sm btn-outline-primary"
+                    className="btn btn-sm btn-outline-primary me-2"
                     onClick={() => {
                       setEditCatData(cat);
                       setShowEdit(true);
@@ -187,7 +191,7 @@ const editCategory = async () => {
                   >
                     ✏️ Edit
                   </button>
-                  {"    "}
+                  {"       "}
                   <button
                     className="btn btn-sm btn-outline-danger"
                     onClick={() => deleteCategory(cat.id)}
@@ -212,7 +216,7 @@ const editCategory = async () => {
       {showEdit && (
         <div className="modal d-block" style={{ background: "rgba(0,0,0,.6)" }}>
           <div className="modal-dialog">
-            <div className="modal-content p-4">
+            <div className="modal-content p-4 mt-32 justify-center">
               <h4>Edit Category</h4>
 
               <input

@@ -86,7 +86,7 @@ export default function Login() {
                 <span
                   className="text-primary"
                   style={{ cursor: "pointer" }}
-                  onClick={() => navigate("/forgot")}
+                  onClick={() => navigate("/forgot-password")}
                 >
                   Forgot password?
                 </span>

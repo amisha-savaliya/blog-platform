@@ -86,13 +86,6 @@ export default function Sidebar() {
                 </Link>
               </li>
 
-              {/* <li className="items-center">
-                <Link className={linkClass("/admin//posts/add")} to="/admin/posts/add">
-                  <i className={iconClass("/admin/posts/add") + " fa-plus"}></i>
-                  Add Post
-                </Link>
-              </li> */}
-
               <li className="items-center">
                 <Link
                   className={linkClass("/admin/category")}
@@ -139,6 +132,42 @@ export default function Sidebar() {
                 >
                   <i className={iconClass("/admin/settings") + " fa-cog"}></i>
                   Settings
+                </Link>
+              </li>
+
+              {/* Divider */}
+              <li className="my-3 border-t border-blueGray-200"></li>
+
+              {/* Section Title */}
+              <li className="text-blueGray-500 text-xs uppercase font-bold block pt-1 pb-4">
+                Quick Actions
+              </li>
+
+              {/* Add Post */}
+              <li className="items-center">
+                <Link
+                  className={linkClass("/admin/posts/add")}
+                  to="/admin/posts/add"
+                >
+                  <i
+                    className={
+                      iconClass("/admin/posts/add") + " fa-plus-circle"
+                    }
+                  ></i>
+                  Add Post
+                </Link>
+              </li>
+
+              {/* Add User */}
+              <li className="items-center">
+                <Link
+                  className={linkClass("/admin/adduser")}
+                  to="/admin/adduser"
+                >
+                  <i
+                    className={iconClass("/admin/adduser") + " fa-user-plus"}
+                  ></i>
+                  Add User
                 </Link>
               </li>
             </ul>

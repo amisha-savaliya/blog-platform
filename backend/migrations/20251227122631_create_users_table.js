@@ -3,6 +3,8 @@
  * @returns { Promise<void> }
  */
 exports.up = async function (knex) {
+    return knex.schema.hasTable('users').then(exists => {
+    if (!exists) {
   return knex.schema.createTable("users", function (table) {
     table.increments("id").primary();
     table.string("name").notNullable();
@@ -15,13 +17,14 @@ exports.up = async function (knex) {
     table.text("token");
     table.foreign("role_id").references("id").inTable("role").onDelete("CASCADE");
   });
+}});
 };
 /**
  * @param { import("knex").Knex } knex
  * @returns { Promise<void> }
  */
 exports.down = async    function(knex) {
-    return knex.schema.dropTable("users");
+    return knex.schema.dropTableIfExists("users");
     
   
 };

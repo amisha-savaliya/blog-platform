@@ -1,42 +1,30 @@
 import { React, useState } from "react";
-import { NavLink, Link, useNavigate } from "react-router-dom";
+import { NavLink, Link, useLocation } from "react-router-dom";
 import { useCategories } from "../context/Categorycontext";
 import { useAuth } from "../context/Authcontext";
-import { jwtDecode } from "jwt-decode";
+// import { jwtDecode } from "jwt-decode";
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [pagesOpen, setPagesOpen] = useState(false);
   const { categories } = useCategories();
+  const location = useLocation();
 
-  const navigate = useNavigate();
-  const { user, setUser } = useAuth();
+   const isInvitePage =
+    location.pathname.includes("setup-account") ||
+    location.pathname.includes("invite");
+    const islogginButtonVisible = location.pathname.includes("login") || location.pathname.includes("signup");
 
-  const normalToken = localStorage.getItem("token");
-  const impersonationToken = sessionStorage.getItem("impersonationToken");
+  const inviteMode = sessionStorage.getItem("invite_mode");
 
-  const activeToken = impersonationToken || normalToken;
-
-  let role = null;
-
-  if (activeToken) {
-    try {
-      const decoded = jwtDecode(activeToken);
-      role = decoded.role;
-    } catch (err) {
-      console.log(err);
-      role = null;
-    }
-  }
+  
+  const { user, logout } = useAuth();
 
   const isImpersonating = sessionStorage.getItem("isImpersonating") === "true";
+ 
 
-  const logout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("current_id");
-    setUser(null);
-    navigate("/login");
-  };
+  const isLoggedIn = user && !isImpersonating && !isInvitePage && !inviteMode && !islogginButtonVisible;
+  const isLoggedin = Boolean(isLoggedIn);
 
   return (
     <>
@@ -95,7 +83,7 @@ export default function Navbar() {
             ))}
 
             <li>
-              {!user ? (
+              {!isLoggedin ? (
                 <NavLink to="/login" onClick={() => setMobileOpen(false)}>
                   Login
                 </NavLink>
@@ -120,15 +108,6 @@ export default function Navbar() {
                     to="/"
                     className="logo d-flex align-items-center gap-2 text-decoration-none fw-bold fs-4"
                   >
-                    {/* <img
-                      src="/favicon.ico"
-                      alt="BlogNest Logo"
-                      style={{
-                        height: "40px",
-                        width: "40px",
-                        objectFit: "contain",
-                      }}
-                    /> */}
                     <span className="text-dark">BlogNest</span>
                     <span className="text-primary">.</span>
                   </NavLink>
@@ -172,44 +151,10 @@ export default function Navbar() {
                     )}
 
                     <li className="ms-auto d-flex align-items-center gap-3">
-                      {!normalToken && !impersonationToken && (
-                        <NavLink
-                          to="/login"
-                          className="btn btn-primary px-4 rounded-pill fw-semibold"
-                        >
-                          <i className="fa-solid fa-right-to-bracket me-2"></i>
-                          Login
-                        </NavLink>
-                      )}
-
-                      {/* Impersonation → Profile ONLY */}
-                      {impersonationToken &&  isImpersonating &&(
-                        <>
-                        <NavLink
-                          to="/profile"
-                          className="btn btn-light border rounded-circle d-flex align-items-center justify-content-center"
-                          style={{ width: "38px", height: "38px" }}
-                          title="Profile"
-                        >
-                          <i className="fa-solid fa-circle-user text-primary fs-5"></i>
-                        </NavLink>
-
-
-                            <button
-                            onClick={logout}
-                            className="btn btn-danger rounded-circle d-flex align-items-center justify-content-center"
-                            style={{ width: "38px", height: "38px" }}
-                            title="Logout"
-                          >
-                            <i className="fa-solid fa-right-from-bracket"></i>
-                          </button>
-
-                        </>
-
-                      )}
-
-                      {/*  Normal User → Profile + Logout */}
-                      {normalToken && !impersonationToken && (
+                  
+        
+                      {/* Normal Logged User */}
+                      {isLoggedin ? (
                         <>
                           <NavLink
                             to="/profile"
@@ -229,7 +174,13 @@ export default function Navbar() {
                             <i className="fa-solid fa-right-from-bracket"></i>
                           </button>
                         </>
-                      )}
+                      ) : (<NavLink
+                          to="/login"
+                          className="btn btn-primary px-4 rounded-pill fw-semibold"
+                        >
+                          <i className="fa-solid fa-right-to-bracket me-2"></i>
+                          Login
+                        </NavLink>)}
                     </li>
                   </ul>
                 </div>

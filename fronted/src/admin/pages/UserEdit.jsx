@@ -1,77 +1,76 @@
-import React from 'react'
-    import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 
-
-
 const UserEdit = () => {
-
   const navigate = useNavigate();
   const location = useLocation();
-//   console.log(location.state)
-  const token=localStorage.getItem("admintoken");
-
-
-  const [form, setForm] = useState({
-    name:"",
-    email:"",
-    password:"",
-  });
+  const token = localStorage.getItem("admintoken");
 
   const { userId } = location.state || {};
+
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+  });
+
   useEffect(() => {
     if (!token) return navigate("/login");
+    if (!userId) return navigate("/admin/users"); // 🔥 safety
 
-    fetch(`http://localhost:5000/users?id=${userId}`, {
+    fetch(`http://localhost:5000/users/adminuser?id=${userId}`, {
       headers: { Authorization: "Bearer " + token },
     })
       .then((res) => res.json())
       .then((data) => {
-        setForm(data);
+        setForm({
+          name: data.name,
+          email: data.email,
+          password: "", // NEVER preload password
+        });
       })
       .catch(console.error);
-  }, [token, navigate]);
-
+  }, [token, userId, navigate]); // 🔥 added userId
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
-  async function handleSave() {
-  const updateData = {
-    name: form.name,
-    email: form.email,
 
-  
+  const handleSave = async () => {
+    const updateData = {
+      name: form.name,
+      email: form.email,
+    };
+
+    if (form.password.trim()) {
+      updateData.password = form.password;
+    }
+
+    const res = await fetch(`http://localhost:5000/users/adminuser/${userId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: "Bearer " + token,
+      },
+      body: JSON.stringify(updateData),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) return alert(data.msg || "Update failed");
+
+    alert("User updated successfully!");
+    navigate("/admin/users");
   };
 
-  if (form.password && form.password.trim() !== "") {
-    updateData.password = form.password;
-  }
+  return (
+    <div className="container mt-5">
+      <button className="btn btn-primary" onClick={() => navigate(-1)}>
+        ⬅ Back
+      </button>
 
-
-  const res = await fetch(`http://localhost:5000/users/${userId}`, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + token,
-    },
-    body: JSON.stringify(updateData),
-  });
-
-  const data = await res.json();
-
-  if (!res.ok) {
-    return alert(data.msg || "Update failed");
-  }
-
-  alert("User updated successfully!");
-  navigate("/admin/users");
-}
-
-  return (<div className="container mt-5">
-  <button className='btn btn-primary' onClick={()=>navigate(-1)}> <i className="fa-solid fa-backward"></i> {" "}back</button>
       <div className="card shadow p-4 col-md-6 mx-auto">
-        <h3 className="mb-3">Edit User</h3>
+        <h3>Edit User</h3>
 
         <input
           className="form-control mb-3"
@@ -95,14 +94,11 @@ const UserEdit = () => {
           name="password"
           value={form.password}
           onChange={handleChange}
-          placeholder="Password"
+          placeholder="New Password (optional)"
         />
 
         <div className="text-end">
-          <button
-            className="btn btn-secondary me-2"
-            onClick={() => navigate(-1)}
-          >
+          <button className="btn btn-secondary me-2" onClick={() => navigate(-1)}>
             Cancel
           </button>
           <button className="btn btn-primary" onClick={handleSave}>
@@ -111,7 +107,7 @@ const UserEdit = () => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default UserEdit
+export default UserEdit;

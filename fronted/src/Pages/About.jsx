@@ -26,7 +26,8 @@ export default function About() {
       </div>
 
       {/* CONTENT SECTIONS */}
-      <div className="section sec-halfs py-0mt-6">
+     <div className="section sec-halfs py-5 mt-5">
+
         <div className="container">
           {[
             {

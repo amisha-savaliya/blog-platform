@@ -9,7 +9,7 @@ const {post_id}=req.query;
     SELECT comments.*, users.name AS user_name
     FROM comments
     JOIN users ON users.id = comments.user_id
-     WHERE comments.is_delete = 0 
+     WHERE comments.is_delete = 0
     
   `;
 

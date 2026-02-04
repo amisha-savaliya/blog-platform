@@ -90,7 +90,7 @@ if (data.user?.role === 2) {
                 <span
                   className="text-primary"
                   style={{ cursor: "pointer" }}
-                  onClick={() => navigate("/forgot")}
+                  onClick={() => navigate("/forgot-password")}
                 >
                   Forgot password?
                 </span>
@@ -117,13 +117,13 @@ if (data.user?.role === 2) {
           </div>
         </div>
 
-        {/* Footer */}
+        {/* Footer
         <div className="text-center mt-4">
           <span className="text-muted">New here?</span>{" "}
           <Link to="/admin/register" className="fw-semibold">
             Create account
           </Link>
-        </div>
+        </div> */}
       </div>
     </div>
   );

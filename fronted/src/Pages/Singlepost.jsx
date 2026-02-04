@@ -2,19 +2,20 @@ import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useCategories } from "../context/Categorycontext";
+import { useRef } from "react";
 export default function SinglePost() {
   const { slug } = useParams();
   const { categories } = useCategories();
   const [post, setPost] = useState(null);
   const navigate = useNavigate();
-  const [viewAdded, setViewAdded] = useState(false);
+  const viewAddedRef = useRef(false);
   const [comments, setComments] = useState({
     name: "",
     email: "",
     message: "",
   });
 
-  const impToken = sessionStorage.getItem("impersonateToken");
+  const impToken = sessionStorage.getItem("impersonationToken");
   const normalToken = localStorage.getItem("token");
   const token = impToken || normalToken;
 
@@ -36,29 +37,26 @@ export default function SinglePost() {
       .catch((err) => console.error("FETCH ERROR:", err));
   }, [slug, token]);
 
+  // console.log(post);
+
   useEffect(() => {
-    if (!post?.id || viewAdded) return;
+    if (!post?.id || viewAddedRef.current) return;
 
-    const addView = async () => {
-      try {
-        await fetch(`http://localhost:5000/posts/${post.id}/view`, {
-          method: "POST",
+    viewAddedRef.current = true;
+
+    fetch(`http://localhost:5000/posts/${post.id}/view`, {
+      method: "POST",
+      headers: token ? { Authorization: "Bearer " + token } : {},
+    })
+      .then(() =>
+        fetch(`http://localhost:5000/posts/${slug}`, {
           headers: token ? { Authorization: "Bearer " + token } : {},
-        });
-
-        // update UI only once
-        setPost((prev) => ({
-          ...prev,
-          views: (prev.views || 0) + 1,
-        }));
-        setViewAdded(true);
-      } catch (err) {
-        console.log("View not recorded (guest or error)", err);
-      }
-    };
-
-    addView();
-  }, [post?.id, viewAdded, token]);
+        }),
+      )
+      .then((res) => res.json())
+      .then((updatedPost) => setPost(updatedPost))
+      .catch(() => {});
+  }, [post?.id]);
 
   if (!post?.id) {
     return (
@@ -176,7 +174,11 @@ export default function SinglePost() {
                 <span className="date">{formattedDate(post.created_at)}</span>
               </div>
               <p className="text-muted mt-3"> {post.views || 0} Views</p>
-              {post.commentCount || 0} Comment
+              {post.commentCount > 0 ? (
+                <p className="text-muted mt-3">{post.commentCount} Comments</p>
+              ) : (
+                <p className="text-muted mt-3">No Comments Yet</p>
+              )}
               {/* COMMENT FORM */}
               <div className="mt-5">
                 <h3>Leave a Comment</h3>
@@ -213,48 +215,45 @@ export default function SinglePost() {
             {/* SIDEBAR */}
 
             {/* {token && ( */}
-              <div className="col-md-12 col-lg-4 sidebar">
-           
-                <div className="sidebar-box">
-                  <div className="d-flex justify-content-between align-items-center mb-2">
-                    <h3 className="heading fw-semibold mb-0">Categories</h3>
-                    <span className="text-muted">
-                      Total: {categories.length}
-                    </span>
-                  </div>
-
-                  <ul className="categories list-unstyled">
-                    {categories.map((cat) => {
-                      const categoryName = cat?.name || cat;
-                      const postCount = cat?.posts || 0;
-                      return (
-                        <li key={categoryName}>
-                          <a href={`/category/${categoryName}`}>
-                            {categoryName} <span>({postCount})</span>
-                          </a>
-                        </li>
-                      );
-                    })}
-                  </ul>
+            <div className="col-md-12 col-lg-4 sidebar">
+              <div className="sidebar-box">
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <h3 className="heading fw-semibold mb-0">Categories</h3>
+                  <span className="text-muted">Total: {categories.length}</span>
                 </div>
 
-                <div className="sidebar-box">
-                  <h3 className="heading">Tags</h3>
-                  <ul className="tags">
-                    {categories.map((tag) => {
-                      const tagName = typeof tag === "object" ? tag.name : tag;
-
-                      return (
-                        <li key={tagName}>
-                          <a href={`/category/${tagName}`}>
-                            #{tagName.toLowerCase()}
-                          </a>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
+                <ul className="categories list-unstyled">
+                  {categories.map((cat) => {
+                    const categoryName = cat?.name || cat;
+                    const postCount = cat?.posts || 0;
+                    return (
+                      <li key={categoryName}>
+                        <a href={`/category/${categoryName}`}>
+                          {categoryName} <span>({postCount})</span>
+                        </a>
+                      </li>
+                    );
+                  })}
+                </ul>
               </div>
+
+              <div className="sidebar-box">
+                <h3 className="heading">Tags</h3>
+                <ul className="tags">
+                  {categories.map((tag) => {
+                    const tagName = typeof tag === "object" ? tag.name : tag;
+
+                    return (
+                      <li key={tagName}>
+                        <a href={`/category/${tagName}`}>
+                          #{tagName.toLowerCase()}
+                        </a>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            </div>
             {/* )} */}
           </div>
         </div>

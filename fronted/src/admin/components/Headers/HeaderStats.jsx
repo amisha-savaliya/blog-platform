@@ -6,46 +6,72 @@ import { useNavigate } from "react-router-dom";
 export default function HeaderStats() {
   const navigate = useNavigate();
   const [users, setUsers] = useState([]);
-
+  const [loading,setLoading]=useState(true)
   const [posts, setPosts] = useState([]);
-
   const [categories, setCategories] = useState([]);
-  useEffect(() => {
-    const token = localStorage.getItem("admintoken");
+useEffect(() => {
+  const token = localStorage.getItem("admintoken");
 
-    if (!token) {
-      navigate("/login");
-      return;
+  if (!token) {
+    navigate("/admin/login");
+    return;
+  }
+
+  setLoading(true);
+  let loaded = 0; // track completed requests
+
+  const checkDone = () => {
+    loaded++;
+    if (loaded === 3) {
+      setLoading(false); // stop skeleton after all 3 done
     }
-    fetch("http://localhost:5000/users", {
-      headers: {
-        Authorization: "Bearer " + token,
-      },
-    })
-      .then((res) => res.json())
-      .then((data) => setUsers(data))
-      .catch((err) => console.error(err));
+  };
 
-    fetch("http://localhost:5000/category/", {
-      headers: {
-        Authorization: "Bearer " + token,
-      },
+  // USERS
+  fetch("http://localhost:5000/users", {
+    headers: { Authorization: "Bearer " + token },
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      setUsers(data);
+      checkDone();
     })
-      .then((res) => res.json())
-      .then((data) => setCategories(data))
-      .catch((err) => console.error(err));
+    .catch((err) => {
+      console.error(err);
+      checkDone();
+    });
 
-    fetch("http://localhost:5000/posts/get", {
-      method:"POST",
-      headers: {
-        Authorization: "Bearer " + token,
-      },
+  // CATEGORIES
+  fetch("http://localhost:5000/category/", {
+    headers: { Authorization: "Bearer " + token },
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      setCategories(data);
+      checkDone();
     })
-      .then((res) => res.json())
-      .then((data) => setPosts(data))
-      .catch((err) => console.error(err));
-      
-  }, []);
+    .catch((err) => {
+      console.error(err);
+      checkDone();
+    });
+
+  // POSTS
+  fetch("http://localhost:5000/posts/get", {
+    method: "POST",
+    headers: { Authorization: "Bearer " + token },
+  })
+    .then((res) => res.json())
+    .then((data) => {
+      setPosts(data.posts || []);
+      checkDone();
+    })
+    .catch((err) => {
+      console.error(err);
+      checkDone();
+    });
+
+}, [navigate]);
+
 
 
   // Recent posts (last 7 days)
@@ -55,6 +81,19 @@ export default function HeaderStats() {
     const diff = (now - postDate) / (1000 * 60 * 60 * 24);
     return diff <= 7;
   });
+
+  if (loading) {
+    return (
+      <div className="relative bg-lightBlue-600 md:pt-32 pb-32 pt-12">
+        <div className="px-4 md:px-10 mx-auto w-full flex gap-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="w-full h-28 bg-gray-300 animate-pulse rounded"></div>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
 
   return (
     <div className="relative bg-lightBlue-600 md:pt-32 pb-32 pt-12">

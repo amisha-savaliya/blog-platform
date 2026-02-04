@@ -1,84 +1,109 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { NavLink } from "react-router-dom";
-import { useAuth } from "../context/Authcontext"; 
+import { useAuth } from "../context/Authcontext";
 
 export default function RetroSection() {
   const [posts, setPosts] = useState([]);
-  const { user } = useAuth(); 
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const { user } = useAuth();
 
-  
+  // 📅 Date formatter (defined once)
+  const formatDate = (date) =>
+    new Date(date).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+
+  // 🚀 Fetch posts
   useEffect(() => {
-    fetch("http://localhost:5000/get", { method: "POST" })
-      .then((res) => res.json())
-      .then((data) => setPosts(data))
-      .catch(console.error);
-  }, []);  
+    const controller = new AbortController();
 
-  const featured = [...posts].reverse().slice(0, 7);
+    const getPosts = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/get", {
+          method: "POST",
+          signal: controller.signal,
+        });
+
+        if (!res.ok) throw new Error("Failed to fetch posts");
+
+        const data = await res.json();
+        setPosts(data);
+      } catch (err) {
+        if (err.name !== "AbortError") setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getPosts();
+    return () => controller.abort(); // 🛑 cancel request on unmount
+  }, []);
+
+  // 🧠 Memoized featured posts (performance)
+  const featured = useMemo(() => {
+    return [...posts].reverse().slice(0, 7);
+  }, [posts]);
+
+  if (loading) return <p className="text-center py-5">Loading posts...</p>;
+  if (error) return <p className="text-danger text-center py-5">{error}</p>;
 
   return (
     <section className="section bg-light">
       <div className="container">
 
-      
         {user && (
-          <div className="alert alert-light text-center fs-5">
+          <div className="welcome-banner text-center fs-5 mb-4">
             Welcome back, <b>{user.name}</b> 👋
           </div>
         )}
 
         <div className="row align-items-stretch retro-layout">
-          <div className="row">
-            <div className="col-md-4">
-              {featured.slice(0, 2).map((p, index) => (
-                <NavLink key={index} to={`/post/${p.slug}`} className="h-entry mb-30 v-height gradient">
-                  <div className="featured-img" style={{ backgroundImage: `url(${p.image})` }} />
-                  <div className="text">
-                    <span className="date">
-                      {new Date(p.created_at).toLocaleDateString("en-US", {
-                        month: "short", day: "numeric", year: "numeric",
-                      })}
-                    </span>
-                    <h2>{p.title}</h2>
-                  </div>
-                </NavLink>
-              ))}
-            </div>
 
-            <div className="col-md-4">
-              {featured[2] && (
-                <NavLink to={`/post/${featured[2].slug}`} className="h-entry img-5 h-100 gradient">
-                  <div className="featured-img" style={{ backgroundImage: `url(${featured[2].image})` }} />
-                  <div className="text">
-                    <span className="date">
-                      {new Date(featured[2].created_at).toLocaleDateString("en-US", {
-                        month: "short", day: "numeric", year: "numeric",
-                      })}
-                    </span>
-                    <h2>{featured[2].title}</h2>
-                  </div>
-                </NavLink>
-              )}
-            </div>
-
-            <div className="col-md-4">
-              {featured.slice(3, 5).map((p) => (
-                <NavLink key={p.id} to={`/post/${p.slug}`} className="h-entry mb-30 v-height gradient">
-                  <div className="featured-img" style={{ backgroundImage: `url(${p.image})` }} />
-                  <div className="text">
-                    <span className="date">
-                      {new Date(p.created_at).toLocaleDateString("en-US", {
-                        month: "short", day: "numeric", year: "numeric",
-                      })}
-                    </span>
-                    <h2>{p.title}</h2>
-                  </div>
-                </NavLink>
-              ))}
-            </div>
+          {/* LEFT COLUMN */}
+          <div className="col-md-4">
+            {featured.slice(0, 2).map((p) => (
+              <PostCard key={p.id} post={p} formatDate={formatDate} />
+            ))}
           </div>
+
+          {/* CENTER BIG */}
+          <div className="col-md-4">
+            {featured[2] && (
+              <PostCard post={featured[2]} big formatDate={formatDate} />
+            )}
+          </div>
+
+          {/* RIGHT COLUMN */}
+          <div className="col-md-4">
+            {featured.slice(3, 5).map((p) => (
+              <PostCard key={p.id} post={p} formatDate={formatDate} />
+            ))}
+          </div>
+
         </div>
       </div>
     </section>
+  );
+}
+
+// 🧩 Reusable Post Card Component
+function PostCard({ post, formatDate, big }) {
+  return (
+    <NavLink
+      to={`/post/${post.slug}`}
+      className={`h-entry gradient ${big ? "img-5 h-100" : "mb-30 v-height"}`}
+    >
+      <div
+        className="featured-img"
+        style={{ backgroundImage: `url(${post.image})` }}
+      />
+      <div className="text">
+        <span className="date">{formatDate(post.created_at)}</span>
+        <h2>{post.title}</h2>
+      </div>
+    </NavLink>
   );
 }

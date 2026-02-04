@@ -4,8 +4,10 @@ import { useNavigate } from "react-router-dom";
 
 export default function EditProfile() {
   const navigate = useNavigate();
-  const token = localStorage.getItem("token");
-  const id = localStorage.getItem("current_id");
+  const normaToken = localStorage.getItem("token");
+  const impersonationToken = sessionStorage.getItem("impersonationToken");
+  const token = normaToken ||  impersonationToken; 
+  const [userId, setUserId] = useState(null);
   
   const [form, setForm] = useState({
     name: "",
@@ -20,11 +22,21 @@ export default function EditProfile() {
       headers: { Authorization: "Bearer " + token },
     })
       .then((res) => res.json())
-      .then((data) => {
-        // console.log("user:", data);
-        setForm(data.user);
-      })
-      .catch(console.error);
+     .then((data) => {
+  const user = data.user; 
+
+  setForm({
+    name: user.name || "",
+    email: user.email || "",
+    password: "", 
+  });
+
+  setUserId(user.id);
+})
+
+  .catch(console.error);
+
+      
   }, [token, navigate]);
 
   const handleChange = (e) => {
@@ -41,7 +53,7 @@ export default function EditProfile() {
     updateData.password = form.password;
   }
 
-  const res = await fetch(`http://localhost:5000/users/${id}`, {
+  const res = await fetch(`http://localhost:5000/users/${userId}`, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -50,7 +62,9 @@ export default function EditProfile() {
     body: JSON.stringify(updateData),
   });
 
-  const data = await res.json();
+const data = await res.json();
+localStorage.setItem("token", data.token); // update token
+
 
   if (!res.ok) {
     return alert(data.msg || "Update failed");
@@ -87,7 +101,7 @@ export default function EditProfile() {
           name="password"
           value={form.password}
           onChange={handleChange}
-          placeholder="Password"
+          placeholder="Password (optional)"
         />
 
         <div className="text-end">

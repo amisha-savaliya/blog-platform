@@ -13,15 +13,14 @@ export default function Addpost() {
   };
 
   const [form, setForm] = useState(initialForm);
-
   const { categories } = useCategories();
 
   const token = localStorage.getItem("admintoken");
-  useEffect(() => {
-    if (!token) return navigate("/login");
-  });
 
-  //cloudniary
+  useEffect(() => {
+    if (!token) navigate("/login");
+  }, [token, navigate]); // ⚠️ important
+
   async function uploadImage(file) {
     const data = new FormData();
     data.append("file", file);
@@ -29,10 +28,7 @@ export default function Addpost() {
 
     const res = await fetch(
       "https://api.cloudinary.com/v1_1/dn2c84jdt/image/upload",
-      {
-        method: "POST",
-        body: data,
-      },
+      { method: "POST", body: data },
     );
 
     const result = await res.json();
@@ -73,15 +69,15 @@ export default function Addpost() {
   }
 
   return (
-    <div className="modal d-block" style={{ background: "rgba(0,0,0,.6)" }}>
-      <div className="modal-dialog">
-        <div className="modal-content p-4">
-          <h4>Add New Blog</h4>
+    <div className="container py-5" style={{ maxWidth: "900px" }}>
+      <div className="card shadow-sm border-0">
+        <div className="card-body p-4">
+          <h3 className="mb-4 fw-bold">Create New Post</h3>
 
           <input
-            className="form-control my-2"
-            placeholder="Title"
-            value={form.title || ""}
+            className="form-control mb-3"
+            placeholder="Post Title"
+            value={form.title}
             onChange={(e) =>
               setForm((prev) => ({ ...prev, title: e.target.value }))
             }
@@ -89,47 +85,55 @@ export default function Addpost() {
 
           <input
             type="file"
-            className="form-control my-2"
+            className="form-control mb-3"
             accept="image/*"
             onChange={(e) =>
               setForm((prev) => ({ ...prev, image: e.target.files[0] }))
             }
           />
+          {form.image && (
+            <img
+              src={URL.createObjectURL(form.image)}
+              alt="preview"
+              className="img-fluid rounded mb-3"
+              style={{ maxHeight: "250px", objectFit: "cover" }}
+            />
+          )}
 
           <select
-            className="form-select my-2"
-            value={form.category || ""}
+            className="form-select mb-3"
+            value={form.category}
             onChange={(e) =>
               setForm((prev) => ({ ...prev, category: e.target.value }))
             }
           >
             <option value="">Select Category</option>
-            {categories.map((cat, i) => (
-              <option key={i} value={cat.id}>
+            {categories.map((cat) => (
+              <option key={cat.id} value={cat.id}>
                 {cat.name}
               </option>
             ))}
           </select>
 
           <textarea
-            className="form-control my-2"
-            rows="4"
-            placeholder="Content"
-            value={form.content || ""}
+            className="form-control mb-3"
+            rows="6"
+            placeholder="Write your content here..."
+            value={form.content}
             onChange={(e) =>
               setForm((prev) => ({ ...prev, content: e.target.value }))
             }
           />
 
-          <div className="text-end mt-3">
+          <div className="d-flex justify-content-end gap-2 mt-4">
             <button
-              className="btn btn-secondary me-2"
-              onClick={() => navigate(-1)}
+              className="btn btn-outline-secondary"
+              onClick={() => navigate("/admin/posts")}
             >
               Cancel
             </button>
-            <button className="btn btn-primary" onClick={handlePost}>
-              Publish
+            <button className="btn btn-primary px-4" onClick={handlePost}>
+              Publish Post
             </button>
           </div>
         </div>

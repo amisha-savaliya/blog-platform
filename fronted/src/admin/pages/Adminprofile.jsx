@@ -64,7 +64,7 @@ export default function Adminprofile() {
       headers: { Authorization: "Bearer " + token },
     });
     const data = await res.json();
-    setPosts(data);
+    setPosts(data.posts);
   };
 
   useEffect(() => {

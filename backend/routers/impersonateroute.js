@@ -15,8 +15,8 @@ router.post("/:id", verifyAdmin, async (req, res) => {
   const adminId = req.user.id;
   const { id } = req.params;
 
-  console.log("Admin ID:", adminId);
-  console.log("Target User ID:", id);
+  // console.log("Admin ID:", adminId);
+  // console.log("Target User ID:", id);
 
   const sql = "SELECT id,name,email,role_id,created_at FROM users WHERE id = ?";
   db.query(sql, [id], (err, result) => {
@@ -30,7 +30,7 @@ router.post("/:id", verifyAdmin, async (req, res) => {
     }
 
     const user = result[0];
-    console.log(user);
+   
 
     const token = jwt.sign(
       {

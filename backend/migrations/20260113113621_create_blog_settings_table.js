@@ -3,6 +3,8 @@
  * @returns { Promise<void> }
  */
 exports.up = function (knex) {
+    return knex.schema.hasTable('blog_settings').then(exists => {
+    if (!exists) {
   return knex.schema.createTable("blog_settings", (table) => {
     table.increments("id").primary();
   
@@ -15,6 +17,7 @@ exports.up = function (knex) {
   
     table.timestamps(true, true);
   });
+}});
 };
 
 /**
@@ -23,5 +26,5 @@ exports.up = function (knex) {
  */
 
 exports.down = function (knex) {
-  return knex.schema.dropTable("blog_settings");
+  return knex.schema.dropTableIfExists("blog_settings");
 };

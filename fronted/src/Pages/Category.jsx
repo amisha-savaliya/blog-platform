@@ -37,67 +37,70 @@ export default function Category() {
     setCurrentPage(1);
   }, [name]);
 
-  //  const formattedDate = (date) =>
-  //   new Date(date).toLocaleDateString(undefined, {
-  //     year: "numeric",
-  //     month: "long",
-  //     day: "numeric",
-  //   });
-
   return (
     <>
-      <div className="container py-5 mb-0">
-        <h1>Category: {name}</h1>
+      <div className="container py-4 mb-0 mt-4">
+        <div className="row">
+          <div className="col-12 h-25">
+            <div className="heading d-flex justify-content-between align-items-center ">
+              <h1>Category: <strong className="text-black">{name}</strong></h1>
+              <button
+                className="btn btn-primary mb-2"
+                onClick={() => navigate("/blogpage")}
+              >
+                ← Back to Blog
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="section search-result-wrap mt-0">
         <div className="container">
-          <div className="row">
-            <div className="col-12 h-50">
-              <div className="heading d-flex justify-content-between align-items-center ">
-                Category: {name}
-                <button
-                  className="btn btn-outline-secondary mb-2"
-                  onClick={() => navigate("/blogpage")}
-                >
-                  ← Back to Blog
-                </button>
-              </div>
-            </div>
-          </div>
-
           <div className="row posts-entry">
-            {/* MAIN POSTS */}
-            {loading && (
-              <div className="py-5 text-center text-muted">
-                <h4>Loading posts...</h4>
-              </div>
-            )}
-
             <div className="col-lg-8">
-              {!loading && posts.length === 0 ? (
+              {/* LOADING */}
+              {loading && (
+                <div className="py-5 text-center text-muted">
+                  <h4>Loading posts...</h4>
+                </div>
+              )}
+
+              {/* NO POSTS */}
+              {!loading && posts.length === 0 && (
                 <div className="py-5 text-center text-muted">
                   <h4>No posts available in this category.</h4>
                 </div>
-              ) : (
+              )}
+
+              {/* POSTS */}
+              {!loading &&
                 posts.map((post) => (
                   <div
                     key={post.id}
-                    className="blog-entry blog-entry-search-item mb-4"
+                    className="blog-entry mb-4 p-3 bg-white rounded shadow-sm"
                   >
-                    <div className="row g-3 align-items-start">
+                    <div className="row g-4 align-items-center">
                       <div className="col-md-4">
-                        <a href={`/post/${post.slug}`} className="img-link">
+                        <Link
+                          to={`/post/${post.slug}`}
+                          className="d-block overflow-hidden rounded"
+                        >
                           <img
                             src={post.image || "/post.png"}
                             alt={post.title}
-                            className="img-fluid rounded"
+                            style={{
+                              width: "100%",
+                              height: "220px",
+                              objectFit: "cover",
+                              borderRadius: "12px",
+                            }}
                           />
-                        </a>
+                        </Link>
                       </div>
 
                       <div className="col-md-8">
-                        <span className="date d-block mb-1">
+                        <span className="date d-block mb-1 text-muted small">
                           {new Date(post.created_at).toLocaleDateString(
                             "en-US",
                             {
@@ -110,11 +113,17 @@ export default function Category() {
                           <span className="text-primary">{post.category}</span>
                         </span>
 
-                        <h2 className="mb-2">
-                          <Link to={`/post/${post.slug}`}>{post.title}</Link>
-                        </h2>
-
-                        <p>{post.content?.substring(0, 150)}...</p>
+                        <h5 className="mb-2 fw-bold">
+                          <Link
+                            to={`/post/${post.slug}`}
+                            className="text-dark text-decoration-none"
+                          >
+                            {post.title}
+                          </Link>
+                        </h5>
+                        <p className="text-muted small mb-2">
+                          {post.content?.substring(0, 120)}...
+                        </p>
 
                         <Link
                           to={`/post/${post.slug}`}
@@ -125,9 +134,9 @@ export default function Category() {
                       </div>
                     </div>
                   </div>
-                ))
-              )}
+                ))}
 
+              {/* PAGINATION */}
               {totalPages > 1 && (
                 <div className="d-flex justify-content-center mt-4 gap-2 flex-wrap">
                   <button

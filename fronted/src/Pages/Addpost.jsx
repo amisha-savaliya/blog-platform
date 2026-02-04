@@ -7,8 +7,9 @@ export default function Addpost({ onAdd, onClose }) {
   const { categories } = useCategories();
   const navigate = useNavigate();
  
-
-  const token = localStorage.getItem("token");
+const impersonationToken = sessionStorage.getItem("impersonationToken");
+  const normalToken = localStorage.getItem("token");
+  const token = impersonationToken || normalToken;
 useEffect(() => {
   if (!token) navigate("/login");
 }, [token, navigate]);

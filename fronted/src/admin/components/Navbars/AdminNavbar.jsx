@@ -26,34 +26,34 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="absolute top-0 left-0 w-full z-10 bg-transparent flex items-center p-4">
-      <div className="w-full mx-auto flex justify-between items-center md:px-10 px-4">
-
+    <nav className="absolute top-0 left-0 w-full z-10 bg-transparent flex items-center p-4 mb-5">
+      <div className="w-full mx-auto flex justify-between items-center md:px-10 px-4 mb-4">
         {/* Page Title */}
-        <div className="text-white text-lg font-semibold hidden lg:inline-block">
+        <div className="text-white text-lg font-semibold text-black hidden lg:inline-block">
           {getPageTitle()}
         </div>
 
         {/* Search */}
+
         <form
-          className="md:flex hidden items-center lg:ml-auto mr-3"
+          className="hidden md:flex items-center lg:ml-auto mr-3"
           onSubmit={(e) => e.preventDefault()}
         >
-          <input
-            type="text"
-            className="form-control px-3 py-2 bg-white rounded text-sm shadow outline-none"
-            style={{ width: "220px", height: "40px" }}
-            value={search}
-            onChange={(e) => handleSearch(e.target.value)}
-            placeholder="🔍 Search posts..."
-          />
+          {/* <div className="relative w-full max-w-xs">
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => handleSearch(e.target.value)}
+              placeholder="🔍 Search posts..."
+              className="w-full pl-5 pr-3 py-2 text-sm border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div> */}
         </form>
 
         {/* User */}
         <ul className="hidden md:flex items-center">
           <UserDropdown />
         </ul>
-
       </div>
     </nav>
   );
