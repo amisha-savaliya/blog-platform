@@ -1,31 +1,23 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import AllCommentsModal from "./AllCommentModel";
+import CommentModal from "./UserCommentModel";
 
 const UserPost = () => {
   const navigate = useNavigate();
   const location = useLocation();
-
   const { userId, userName } = location.state || {};
 
   const [posts, setPosts] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [comments, setComments] = useState([]);
-  const [showModal, setShowModal] = useState(false);
-  const [activePostId, setActivePostId] = useState(null);
-  const openComments = (postId) => {
-    setActivePostId(postId);
-    setShowModal(true);
-  };
 
-  const closeComments = () => {
-    setShowModal(false);
-    setActivePostId(null);
-  };
+  // ✅ Comment modal control
+  const [showComments, setShowComments] = useState(false);
+  const [postId, setPostId] = useState(null);
 
   const token = localStorage.getItem("admintoken");
 
+  /* ---------------- FETCH POSTS ---------------- */
   useEffect(() => {
     if (!userId) {
       navigate(-1);
@@ -34,62 +26,30 @@ const UserPost = () => {
 
     fetch(
       `http://localhost:5000/posts?userId=${userId}&page=${currentPage}&limit=6`,
-      {
-        headers: {
-          Authorization: "Bearer " + token,
-        },
-      },
+      { headers: { Authorization: "Bearer " + token } },
     )
       .then((res) => res.json())
       .then((data) => {
-        //  console.log("API RESPONSE:", data);
         setPosts(data.posts || []);
         setTotalPages(data.totalPages || 1);
       })
       .catch(console.error);
-  }, [userId, currentPage, token]);
+  }, [userId, currentPage, token, navigate]);
 
-  const loadComments = async () => {
-    try {
-      const res = await fetch("http://localhost:5000/comment", {
-        headers: { Authorization: "Bearer " + token },
-      });
-
-      const commentData = await res.json();
-
-      const grouped = {};
-      commentData.forEach((c) => {
-        if (!grouped[c.post_id]) grouped[c.post_id] = [];
-        grouped[c.post_id].push(c);
-      });
-
-      setComments(grouped);
-    } catch (err) {
-      console.error("Load comments failed:", err);
-    }
-  };
-  useEffect(() => {
-    loadComments();
-  }, []);
-
+  /* ---------------- DELETE POST ---------------- */
   const removePost = async (slug) => {
     if (!window.confirm("Are you sure you want to delete this post?")) return;
 
-    try {
-      await fetch(`http://localhost:5000/posts/${slug}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: "Bearer " + token,
-        },
-      });
+    await fetch(`http://localhost:5000/posts/${slug}`, {
+      method: "DELETE",
+      headers: { Authorization: "Bearer " + token },
+    });
 
-      setPosts((prev) => prev.filter((p) => p.slug !== slug));
-    } catch (err) {
-      console.error(err);
-    }
+    setPosts((prev) => prev.filter((p) => p.slug !== slug));
   };
 
-   const handleLike = async (postId) => {
+  /* ---------------- LIKE POST ---------------- */
+  const handleLike = async (postId) => {
     const res = await fetch(`http://localhost:5000/posts/${postId}/like`, {
       method: "POST",
       headers: { Authorization: "Bearer " + token },
@@ -97,8 +57,8 @@ const UserPost = () => {
 
     const data = await res.json();
 
-    setPosts((prevPosts) =>
-      prevPosts.map((p) =>
+    setPosts((prev) =>
+      prev.map((p) =>
         p.id === postId
           ? {
               ...p,
@@ -115,17 +75,20 @@ const UserPost = () => {
       day: "2-digit",
       month: "short",
       year: "numeric",
-      hour12: true,
     });
 
   return (
-    <div className="container section">
+    <div className="md:px-8 py-5 mt-3">
+      {/* HEADER */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2 className="heading text-primary">
           Posts By : <b className="text-capitalize">{userName}</b>
         </h2>
         <span>Total posts : {posts.length}</span>
-        <button className="btn btn-primary" onClick={() => navigate(-1)}>
+        <button
+          className="btn btn-primary"
+          onClick={() => navigate("/admin/users")}
+        >
           Back
         </button>
       </div>
@@ -137,91 +100,92 @@ const UserPost = () => {
           {posts.map((post) => (
             <div className="col-md-4" key={post.id}>
               <div
-                className="post-entry bg-white p-3 shadow-sm rounded"
+                className="post-entry bg-white p-2 shadow-sm rounded position-relative"
                 style={{ minHeight: "520px" }}
               >
                 <img
                   src={post.image}
                   className="img-fluid mb-3 rounded"
                   alt=""
-                  style={{ height: "250px", width: "" }}
+                  style={{ height: "280px", width: "100%", objectFit: "cover" }}
                 />
+                <span className="badge bg-primary position-absolute top-0 start-0 m-4 px-3 py-2 rounded-pill">
+                  {post.category}
+                </span>
 
-                <h4>{post.title}</h4>
+                <h4 className="fw-semibold text-black">{post.title}</h4>
 
                 <span className="d-block text-primary">
                   By <span className="text-muted">{post.author}</span>
                 </span>
 
-                <span className="d-block text-primary">{post.category}</span>
+                {/* <span className="d-block text-primary">{post.category}</span> */}
 
-                <p className="mt-2">{post.content.substring(0, 100)}...</p>
+                <p className="mt-2 fs-6">{post.content.substring(0, 100)}...</p>
 
-                <div className="d-flex align-items-center gap-2 mt-3">
-                  <button
-                    className="btn btn-sm btn-primary"
-                    onClick={() => navigate(`/admin/post/${post.slug}`)}
-                  >
-                    <i className="fa-solid fa-eye"></i>
-                  </button>
+                <div className="d-flex justify-content-between align-items-center mt-2 ">
+                  <div className="btn-group btn-group-sm gap-3">
+                    {/* <button
+                      className="btn btn-light border"
+                      onClick={() => navigate(`/admin/post/${post.slug}`)}
+                    >
+                      <i className="fa-solid fa-eye"></i>
+                    </button> */}
 
-                  <button
-                    className="btn btn-sm btn-warning"
-                    onClick={() => navigate(`/admin/edit-post/${post.slug}`)}
-                  >
-                    <i className="fa-solid fa-pen"></i>
-                  </button>
+                    <button
+                      className="btn btn-light border "
+                      onClick={() => navigate(`/admin/edit-post/${post.slug}`)}
+                    >
+                      <i className="fa-solid fa-pen text-warning"></i>
+                    </button>
 
-                  <button
-                    className="btn btn-sm btn-danger"
-                    onClick={() => removePost(post.slug)}
-                  >
-                    <i className="fa-solid fa-trash"></i>
-                  </button>
-
+                    <button
+                      className="btn btn-light border"
+                      onClick={() => removePost(post.slug)}
+                    >
+                      <i className="fa-solid fa-trash text-danger"></i>
+                    </button>
+                  </div>
                   <small className="text-muted ms-auto">
                     {formattedDate(post.created_at)}
                   </small>
                 </div>
-                {/* COMMENTS PREVIEW */}
 
-                <div className="d-flex gap-2 align-items-start mt-3 mb-2"></div>
-
-
-               
+                <div className="card-footer d-flex gap-3 align-items-center mt-1">
                   <button
-                    className="btn btn-link p-0 mt-1 cursor-pointer"
-                    onClick={() => openComments(post.id)}
+                    className={
+                      post.userLiked ? "text-danger fs-6" : "text-muted fs-6"
+                    }
+                    onClick={() => handleLike(post.id)}
                   >
-                    More comments ({comments[post.id]?.length || 0})
+                    {post.userLiked ? "❤️ " : "🤍 "} {post.totalLikes || 0}
                   </button>
-             
-              </div>
-               <div className=" card-footer d-flex gap-2 align-items-center mt-1 mb-0">
-                <button
-                  className={
-                    post.userLiked ? "text-danger fs-6" : "text-muted fs-6"
-                  }
-                  onClick={() => handleLike(post.id)}
-                >
-                  {post.userLiked ? "❤️ " : "🤍 "} {post.totalLikes || 0}
-                </button>
-                <button
-                  className="btn btn-outline-none fs-6"
-                  onClick={() => openComments(post.id)}
-                >
-                  <i className="fa-regular fa-comment"></i> {post.commentCount}
-                </button>{" "}
-                <button className="btn btn-outline-none fs-6">
-                  <i className="fa fa-eye"></i> {post.views}
-                </button>
+
+                  <button
+                    className="btn btn-outline-none fs-6"
+                    onClick={() => {
+                      setPostId(post.id);
+                      setShowComments(true);
+                    }}
+                  >
+                    <i className="fa-regular fa-comment"></i>{" "}
+                    {post.commentCount || 0}
+                  </button>
+
+                  <button
+                    className="btn btn-outline-none fs-6"
+                    onClick={() => navigate(`/admin/post/${post.slug}`)}
+                  >
+                    <i className="fa fa-eye"></i> {post.views || 0}
+                  </button>
+                </div>
               </div>
             </div>
           ))}
         </div>
       )}
 
-      {/* Pagination */}
+      {/* PAGINATION */}
       <div className="d-flex justify-content-end align-items-center gap-2 mt-4">
         <button
           className="btn btn-sm btn-outline-primary"
@@ -244,12 +208,11 @@ const UserPost = () => {
         </button>
       </div>
 
-      <AllCommentsModal
-        showModal={showModal}
-        closeComments={closeComments}
-        comments={comments}
-        activePostId={activePostId}
-        formattedDate={formattedDate}
+      {/* ✅ SMART COMMENT MODAL */}
+      <CommentModal
+        show={showComments}
+        onClose={() => setShowComments(false)}
+        postId={postId}
       />
     </div>
   );

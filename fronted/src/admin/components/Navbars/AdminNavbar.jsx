@@ -1,59 +1,45 @@
-import React, { useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import React from "react";
+import { useLocation, matchPath } from "react-router-dom";
 import UserDropdown from "../../components/Dropdowns/UserDropdown";
 
 export default function Navbar() {
-  const [search, setSearch] = useState("");
   const location = useLocation();
-  const navigate = useNavigate();
+  const path = location.pathname;
 
   const getPageTitle = () => {
-    const path = location.pathname;
+    // Exact routes
+    if (path === "/admin") return "Dashboard";
+    if (path === "/admin/posts") return "Posts";
+    if (path === "/admin/category") return "Categories";
+    if(path==="/admin/users") return "Users";
+    if (path === "/admin/profile") return "My Profile";
+    if (path === "/admin/add-user") return "Add User";
+    if (path === "/admin/comments") return "Comments";
+    if (path === "/admin/roles") return "Roles & Permissions";
+    if (path === "/admin/settings") return "Settings";
+    if (path === "/admin/profile/") return "My Profile";
 
-    if (path.includes("/admin/posts")) return "Posts";
-    if (path.includes("/admin/add-post")) return "Add New Post";
-    if (path.includes("/admin/categories")) return "Categories";
-    if (path.includes("/admin/profile")) return "My Profile";
-    if (path.includes("/admin/settings")) return "Settings";
+    // Dynamic routes
+    if (matchPath("/admin/posts/add", path)) return "Add-Post";
+    if (matchPath("/admin/edit-post/:slug", path)) return "Edit Post";
+    if (matchPath("/admin/post/:slug", path)) return "View Post";
+    if (matchPath("/admin/adduser", path)) return "Add-User";
+    if (matchPath("/admin/user-edit", path)) return "Edit User";
+    if (matchPath("/admin/user-posts", path)) return "User-Post";
+
     return "Dashboard";
   };
 
-  const handleSearch = (value) => {
-    setSearch(value);
-
-    // Push search to posts page
-    navigate(`/admin/posts?search=${encodeURIComponent(value)}`);
-  };
-
   return (
-    <nav className="absolute top-0 left-0 w-full z-10 bg-transparent flex items-center p-4 mb-5">
-      <div className="w-full mx-auto flex justify-between items-center md:px-10 px-4 mb-4">
-        {/* Page Title */}
-        <div className="text-white text-lg font-semibold text-black hidden lg:inline-block">
+    <nav className="sticky top-0 z-40 bg-white shadow-sm border-b">
+      <div className="flex justify-between items-center px-6 py-3">
+        <h2 className="text-xl font-semibold text-gray-800">
           {getPageTitle()}
-        </div>
+        </h2>
+        
+        
 
-        {/* Search */}
-
-        <form
-          className="hidden md:flex items-center lg:ml-auto mr-3"
-          onSubmit={(e) => e.preventDefault()}
-        >
-          {/* <div className="relative w-full max-w-xs">
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => handleSearch(e.target.value)}
-              placeholder="🔍 Search posts..."
-              className="w-full pl-5 pr-3 py-2 text-sm border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div> */}
-        </form>
-
-        {/* User */}
-        <ul className="hidden md:flex items-center">
-          <UserDropdown />
-        </ul>
+        <UserDropdown />
       </div>
     </nav>
   );

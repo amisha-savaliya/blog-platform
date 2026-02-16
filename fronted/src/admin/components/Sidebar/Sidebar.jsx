@@ -1,179 +1,134 @@
 import { Link, useLocation } from "react-router-dom";
 import UserDropdown from "../Dropdowns/UserDropdown";
-import React from "react";
 
-export default function Sidebar() {
-  const [collapseShow, setCollapseShow] = React.useState("hidden");
+export default function Sidebar({ isOpen, setIsOpen }) {
   const location = useLocation();
 
-  const isActive = (path) => location.pathname.includes(path);
+  const isActive = (path) => location.pathname.startsWith(path);
 
   const linkClass = (path) =>
-    "text-xs uppercase py-3 font-bold block " +
-    (isActive(path)
-      ? "text-lightBlue-500 hover:text-lightBlue-600"
-      : "text-blueGray-700 hover:text-blueGray-500");
+    `flex items-center text-sm uppercase py-3 px-4 font-semibold transition
+     ${
+       isActive(path)
+         ? "text-lightBlue-600 bg-lightBlue-50"
+         : "text-blueGray-700 hover:bg-blueGray-100"
+     }`;
 
   const iconClass = (path) =>
-    "fas mr-2 text-sm " + (isActive(path) ? "opacity-75" : "text-blueGray-300");
+    `fas mr-3 text-base ${
+      isActive(path) ? "text-lightBlue-600" : "text-blueGray-400"
+    }`;
 
   return (
     <>
-      <nav className="md:left-0 md:block md:fixed md:top-0 md:bottom-0 md:overflow-y-auto md:flex-row md:flex-nowrap md:overflow-hidden shadow-xl bg-white flex flex-wrap items-center justify-between relative md:w-64 z-10 py-4 px-6">
-        <div className="md:flex-col md:items-stretch md:min-h-full md:flex-nowrap px-0 flex flex-wrap items-center justify-between w-full mx-auto">
-          {/* Mobile Toggler */}
-          <button
-            className="cursor-pointer text-black opacity-50 md:hidden px-3 py-1 text-xl leading-none bg-transparent rounded border border-solid border-transparent"
-            onClick={() => setCollapseShow("bg-white m-2 py-3 px-6")}
-          >
-            <i className="fas fa-bars"></i>
-          </button>
+      {/* ===== MOBILE TOP BAR ===== */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-40 bg-white shadow px-4 py-3 flex justify-between items-center">
+        <button onClick={() => setIsOpen(true)}>
+          <i className="fas fa-bars text-xl"></i>
+        </button>
 
-          {/* Brand */}
+        <Link
+          to="/admin/dashboard"
+          className="text-lg font-bold text-lightBlue-600"
+        >
+          BlogNest <span className="text-xs text-blueGray-400">ADMIN</span>
+        </Link>
+
+        <UserDropdown />
+      </div>
+
+      {/* ===== OVERLAY (mobile) ===== */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 z-30 md:hidden"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
+      {/* ===== SIDEBAR ===== */}
+      <aside
+        className={`
+          fixed top-0 left-0 h-screen w-64 bg-white shadow-lg z-40
+          transform transition-transform duration-300
+          ${isOpen ? "translate-x-0" : "-translate-x-full"}
+          md:translate-x-0
+        `}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b">
           <Link
-            className="md:block text-left md:pb-2 text-blueGray-600 text-sm uppercase font-bold p-4 px-0"
             to="/admin/dashboard"
+            className="text-xl font-extrabold text-lightBlue-600"
           >
-            BlogNest ADMIN
+            📰 BlogNest <span className="text-sm text-blueGray-400">ADMIN</span>
           </Link>
 
-          {/* Mobile User */}
-          <ul className="md:hidden items-center flex list-none">
-            <li className="inline-block relative">
-              <UserDropdown />
-            </li>
+          <button
+            className="md:hidden"
+            onClick={() => setIsOpen(false)}
+          >
+            <i className="fas fa-times text-lg"></i>
+          </button>
+        </div>
+
+        {/* Menu */}
+        <div className="overflow-y-auto h-[calc(100vh-64px)] pb-10">
+          <p className="px-6 mt-6 mb-2 text-xs uppercase font-bold text-blueGray-400">
+            Management
+          </p>
+
+          <ul>
+            {[
+              { path: "/admin/dashboard", icon: "fa-chart-line", label: "Dashboard" },
+              { path: "/admin/posts", icon: "fa-newspaper", label: "Posts" },
+              { path: "/admin/category", icon: "fa-tags", label: "Categories" },
+              { path: "/admin/users", icon: "fa-users", label: "Users" },
+              { path: "/admin/comments", icon: "fa-comment", label: "Comments" },
+              { path: "/admin/roles", icon: "fa-user-shield", label: "Roles & Permissions" },
+              { path: "/admin/settings", icon: "fa-cog", label: "Settings" },
+            ].map((item) => (
+              <li key={item.path}>
+                <Link
+                  to={item.path}
+                  className={linkClass(item.path)}
+                  onClick={() => setIsOpen(false)}
+                >
+                  <i className={`${iconClass(item.path)} ${item.icon}`}></i>
+                  {item.label}
+                </Link>
+              </li>
+            ))}
           </ul>
 
-          {/* Sidebar Content */}
-          <div
-            className={
-              "md:flex md:flex-col md:items-stretch md:opacity-100 md:relative md:mt-4 shadow absolute top-0 left-0 right-0 z-40 overflow-y-auto overflow-x-hidden h-auto items-center flex-1 rounded " +
-              collapseShow
-            }
-          >
-            {/* Mobile Header */}
-            <div className="md:hidden flex justify-between pb-4 mb-4 border-b border-blueGray-200">
-              <span className="font-bold uppercase text-sm">Menu</span>
-              <button onClick={() => setCollapseShow("hidden")}>
-                <i className="fas fa-times"></i>
-              </button>
-            </div>
+          <p className="px-6 mt-6 mb-2 text-xs uppercase font-bold text-blueGray-400">
+            Quick Actions
+          </p>
 
-            {/* Section */}
-            {/* <h6 className="text-blueGray-500 text-xs uppercase font-bold block pt-1 pb-4">
-              Blog Management
-            </h6> */}
+          <ul>
+            <li>
+              <Link
+                to="/admin/posts/add"
+                className={linkClass("/admin/posts/add")}
+                onClick={() => setIsOpen(false)}
+              >
+                <i className="fas fa-plus-circle mr-3"></i>
+                Add Post
+              </Link>
+            </li>
 
-            <ul className="md:flex-col md:min-w-full flex flex-col list-none">
-              <li className="items-center">
-                <Link
-                  className={linkClass("/admin/dashboard")}
-                  to="/admin/dashboard"
-                >
-                  <i
-                    className={iconClass("/admin/dashboard") + " fa-chart-line"}
-                  ></i>
-                  Dashboard
-                </Link>
-              </li>
-
-              <li className="items-center">
-                <Link className={linkClass("/admin/posts")} to="/admin/posts">
-                  <i
-                    className={iconClass("/admin/posts") + " fa-newspaper"}
-                  ></i>
-                  Posts
-                </Link>
-              </li>
-
-              <li className="items-center">
-                <Link
-                  className={linkClass("/admin/category")}
-                  to="/admin/category"
-                >
-                  <i className={iconClass("/admin/category") + " fa-tags"}></i>
-                  Categories
-                </Link>
-              </li>
-
-              <li className="items-center">
-                <Link className={linkClass("/admin/users")} to="/admin/users">
-                  <i className={iconClass("/admin/users") + " fa-users"}></i>
-                  Users
-                </Link>
-              </li>
-              <li className="items-center">
-                <Link
-                  className={linkClass("/admin/comments")}
-                  to="/admin/comments"
-                >
-                  <i
-                    className={iconClass("/admin/comments") + " fa-comment"}
-                  ></i>
-                  comments
-                </Link>
-              </li>
-
-              <li className="items-center">
-                <Link className={linkClass("/admin/roles")} to="/admin/roles">
-                  <i
-                    className={
-                      iconClass("/admin/roles") + " fa-solid fa-user-shield"
-                    }
-                  ></i>
-                  Manage role
-                </Link>
-              </li>
-
-              <li className="items-center">
-                <Link
-                  className={linkClass("/admin/settings")}
-                  to="/admin/settings"
-                >
-                  <i className={iconClass("/admin/settings") + " fa-cog"}></i>
-                  Settings
-                </Link>
-              </li>
-
-              {/* Divider */}
-              <li className="my-3 border-t border-blueGray-200"></li>
-
-              {/* Section Title */}
-              <li className="text-blueGray-500 text-xs uppercase font-bold block pt-1 pb-4">
-                Quick Actions
-              </li>
-
-              {/* Add Post */}
-              <li className="items-center">
-                <Link
-                  className={linkClass("/admin/posts/add")}
-                  to="/admin/posts/add"
-                >
-                  <i
-                    className={
-                      iconClass("/admin/posts/add") + " fa-plus-circle"
-                    }
-                  ></i>
-                  Add Post
-                </Link>
-              </li>
-
-              {/* Add User */}
-              <li className="items-center">
-                <Link
-                  className={linkClass("/admin/adduser")}
-                  to="/admin/adduser"
-                >
-                  <i
-                    className={iconClass("/admin/adduser") + " fa-user-plus"}
-                  ></i>
-                  Add User
-                </Link>
-              </li>
-            </ul>
-          </div>
+            <li>
+              <Link
+                to="/admin/adduser"
+                className={linkClass("/admin/adduser")}
+                onClick={() => setIsOpen(false)}
+              >
+                <i className="fas fa-user-plus mr-3"></i>
+                Add User
+              </Link>
+            </li>
+          </ul>
         </div>
-      </nav>
+      </aside>
     </>
   );
 }

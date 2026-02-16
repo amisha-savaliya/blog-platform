@@ -1,23 +1,20 @@
-import React from "react";
-
-import PostChart from "../../components/Cards/PostChart";
-import { useState } from "react";
-import { useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import PostChart from "../../components/Cards/PostChart";
 import HeaderStats from "../../components/Headers/HeaderStats";
 
 export default function Dashboard() {
   const [posts, setPosts] = useState([]);
-   const [loading, setLoading] = useState(true);
-   const [chartData, setChartData] = useState([]); 
-  const [range, setRange] = useState("7"); 
+  const [chartData, setChartData] = useState([]);
+  const [range, setRange] = useState("7");
+  const [loading, setLoading] = useState(true);
+
   const token = localStorage.getItem("admintoken");
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
+
+  /* ---------------- FETCH DASHBOARD DATA ---------------- */
   useEffect(() => {
-    if (!token) {
-      navigate("/admin/login");
-      return;
-    }
+    if (!token) return navigate("/admin/login");
 
     setLoading(true);
 
@@ -25,81 +22,66 @@ export default function Dashboard() {
       method: "POST",
       headers: { Authorization: "Bearer " + token },
     })
-      .then((res) => {
-        if (!res.ok) throw new Error("Unauthorized");
-        return res.json();
-      })
+      .then((res) => res.json())
       .then((data) => {
-        setPosts(data.posts);
-        setChartData(data.chartStats);
+        setPosts(data.posts || []);
+        setChartData(data.chartStats || []);
         setLoading(false);
       })
-      .catch((err) => {
-        console.error(err);
-        navigate("/admin/login");
-      });
-  }, [token, navigate, range]); // ✅ reload when range changes
+      .catch(() => navigate("/admin/login"));
+  }, [range, token, navigate]);
 
-  const sorted = [...posts].sort((a, b) => (b.views || 0) - (a.views || 0));
-
+  const topPosts = [...posts].sort((a, b) => (b.views || 0) - (a.views || 0));
 
   if (loading) {
     return (
-      <div className="px-4">
-        <div className="skeleton h-64 rounded mb-6"></div>
-
-        <div className="bg-white rounded-xl shadow px-4 py-4">
-          <div className="skeleton h-6 w-48 mb-4"></div>
-
-          {[1, 2, 3, 4, 5].map((i) => (
-            <div key={i} className="flex justify-between py-3 border-b">
-              <div className="skeleton h-4 w-10"></div>
-              <div className="skeleton h-4 w-40"></div>
-              <div className="skeleton h-4 w-16"></div>
-            </div>
-          ))}
-        </div>
+      <div className="p-4">
+        <div className="animate-pulse bg-gray-200 h-40 rounded mb-6"></div>
+        <div className="animate-pulse bg-gray-200 h-64 rounded"></div>
       </div>
     );
   }
+return (
+  <div className="px-4 md:px-8 py-6 space-y-6 mt-3 md:ml-72 pt-16 md:pt-0">
+    <div className="flex justify-between items-center">
+      <h2 className="text-2xl font-bold text-gray-800">
+        Dashboard Overview
+      </h2>
+    </div>
 
-  return (
-    <>
-     <div className="bg-blue-600 p-6 rounded-xl text-white mb-6">
-        <div className="grid grid-cols-4 gap-6">
-          <HeaderStats />
-        </div>
-      <div className="flex flex-wrap px-1">
-      
-        <div className="w-full xl:w-8/12 mb-12 xl:mb-0 px-4">
-           <PostChart data={chartData} /> 
-        </div>
-        {/* <div className="w-full xl:w-4/12 px-4">
-          <CardBarChart />
-        </div> */}
-      </div>
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <HeaderStats />
+    </div>
 
-      {/* <div className="flex flex-wrap mt-4">
-        <div className="w-full xl:w-8/12 mb-12 xl:mb-0 px-4">
-          <CardPageVisits />
-        </div>
-        <div className="w-full xl:w-4/12 px-4">
-          <CardSocialTraffic />
-        </div>
-      </div> */}
+    <div className="bg-white p-5 rounded-2xl shadow">
+      <h4 className="font-semibold text-gray-700 mb-3">
+        Post Activity
+      </h4>
+      <PostChart data={chartData} />
+    </div>
 
-      <div className="container mt-5 bg-white rounded-xl shadow px-4">
-        <h3 className="font-semibold mb-4 p-2 text-black">Top Performing Posts</h3>
+    <div className="bg-white p-5 rounded-2xl shadow">
+      <h4 className="font-semibold text-gray-700 mb-4">
+        🔥 Top Performing Posts
+      </h4>
 
-        {sorted.slice(0, 5).map((p) => (
-          <div key={p.id} className="border-b py-2 flex justify-between">
-          <p>#{p.id}</p>
-            <span>{p.title}</span>
-            <span className="text-sm text-black-500">{p.views || 0} views</span>
+      {topPosts.slice(0, 5).map((p, i) => (
+        <div
+          key={p.id}
+          className="flex justify-between items-center border-b py-3 last:border-none"
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-gray-400 text-sm">#{i + 1}</span>
+            <span className="font-medium text-gray-800">{p.title}</span>
           </div>
-        ))}
-      </div>
-      </div>
-    </>
-  );
+
+          <span className="text-sm text-gray-500">
+            {p.views || 0} views
+          </span>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
 }

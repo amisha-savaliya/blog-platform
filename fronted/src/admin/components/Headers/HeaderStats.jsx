@@ -84,7 +84,7 @@ useEffect(() => {
 
   if (loading) {
     return (
-      <div className="relative bg-lightBlue-600 md:pt-32 pb-32 pt-12">
+      <div className="bg-lightBlue-600 md:pt-24 pb-24 pt-6">
         <div className="px-4 md:px-10 mx-auto w-full flex gap-4">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="w-full h-28 bg-gray-300 animate-pulse rounded"></div>
@@ -96,9 +96,9 @@ useEffect(() => {
 
 
   return (
-    <div className="relative bg-lightBlue-600 md:pt-32 pb-32 pt-12">
-      <div className="px-4 md:px-10 mx-auto w-full">
-        <div className="flex flex-wrap">
+      <div className="relative bg-lightBlue-600 md:pt-32 pb-32 pt-12">
+        <div className="px-4 md:px-10 mx-auto w-full">
+          <div className="flex flex-wrap">
           <div className="w-full sm:w-12/12 lg:w-6/12 xl:w-3/12 px-4">
             <CardStats
               statSubtitle="TOTAL POSTS"

@@ -195,7 +195,7 @@ export default function BlogPage() {
                     {SearchHighlight(p.category)}
                   </span>
 
-                  <p>
+                  <p >
                     {SearchHighlight((p.content || "").slice(0, 150))}
                     {p.content && "..."}
                   </p>

@@ -1,12 +1,13 @@
-import { useEffect } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import EditForm from "../components/Edit/EditForm";
 
-export default function EditAdminProfile() {
+export default function AdminEditProfile() {
   const navigate = useNavigate();
-
   const token = localStorage.getItem("admintoken");
+
   const [userId, setUserId] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState({
     name: "",
@@ -23,31 +24,24 @@ export default function EditAdminProfile() {
       .then((res) => res.json())
       .then((data) => {
         const user = data.user;
-
         setForm({
           name: user.name || "",
           email: user.email || "",
           password: "",
         });
-
         setUserId(user.id);
       })
-
       .catch(console.error);
   }, [token, navigate]);
 
-  const handleChange = (e) => {
+  const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
-  };
-  async function handleSave() {
-    const updateData = {
-      name: form.name,
-      email: form.email,
-    };
 
-    if (form.password && form.password.trim() !== "") {
-      updateData.password = form.password;
-    }
+  const handleSave = async () => {
+    setLoading(true);
+
+    const updateData = { name: form.name, email: form.email };
+    if (form.password.trim()) updateData.password = form.password;
 
     const res = await fetch(`http://localhost:5000/users/${userId}`, {
       method: "PUT",
@@ -58,59 +52,33 @@ export default function EditAdminProfile() {
       body: JSON.stringify(updateData),
     });
 
-   const data = await res.json();
-localStorage.setItem("admintoken", data.token); // update token
+    const data = await res.json();
+    setLoading(false);
 
-    if (!res.ok) {
-      return alert(data.msg || "Update failed");
-    }
+    if (!res.ok) return alert(data.msg || "Update failed");
 
-    alert("Profile updated successfully!");
+    localStorage.setItem("admintoken", data.token);
+    alert("Profile updated!");
     navigate("/admin/profile");
-  }
+  };
 
   return (
-    <div className="container mt-5 py-5">
-      <div className="card shadow p-4 col-md-6 mx-auto">
-        <h3 className="mb-3">Edit Admin Profile</h3>
+    <div className="container py-5 mt-5" style={{ maxWidth: "720px" }}>
+      <button
+        className="btn btn-light border mb-3"
+        onClick={() => navigate(-1)}
+      >
+        ← Back
+      </button>
 
-        <input
-          className="form-control mb-3"
-          name="name"
-          value={form.name}
-          onChange={handleChange}
-          placeholder="Name"
-        />
-
-        <input
-          className="form-control mb-3"
-          name="email"
-          value={form.email}
-          onChange={handleChange}
-          placeholder="Email"
-        />
-
-        <input
-          type="password"
-          className="form-control mb-3"
-          name="password"
-          value={form.password}
-          onChange={handleChange}
-          placeholder="Password"
-        />
-
-        <div className="text-end">
-          <button
-            className="btn btn-secondary me-2"
-            onClick={() => navigate(-1)}
-          >
-            Cancel
-          </button>
-          <button className="btn btn-primary" onClick={handleSave}>
-            Save Changes
-          </button>
-        </div>
-      </div>
+      <EditForm
+        form={form}
+        onChange={handleChange}
+        onSubmit={handleSave}
+        loading={loading}
+        title="Edit Admin Profile"
+        subtitle="Manage your account details"
+      />
     </div>
   );
 }

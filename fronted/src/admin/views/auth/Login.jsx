@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import githubIcon from "../../assets/img/github.png";
 import googleIcon from "../../assets/img/google.svg";
@@ -11,33 +11,53 @@ export default function AdminLogin() {
     password: "",
   });
 
+  const [loading, setLoading] = useState(false);
+
+  // 🔒 If already logged in, skip login page
+  useEffect(() => {
+    const token = localStorage.getItem("admintoken");
+    if (token) navigate("/admin/dashboard");
+  }, [navigate]);
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (loading) return;
 
-    const res = await fetch("http://localhost:5000/admin/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form),
-    });
+    try {
+      setLoading(true);
 
-    const data = await res.json();
+      const res = await fetch("http://localhost:5000/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
 
-if (!res.ok) {
-  return alert(data.message || data.msg || "Login failed");
-}
+      const data = await res.json();
 
-if (data.user?.role === 2) {
-  localStorage.setItem("admintoken", data.token);
-  navigate("/admin/dashboard");
-} else {
-  alert("Not an admin account");
-}
-  
+      if (!res.ok) {
+        throw new Error(data.message || data.msg || "Login failed");
+      }
 
+      if (data.user?.role !== 2) {
+        throw new Error("Not an admin account");
+      }
+
+      // Clear any old tokens
+      localStorage.removeItem("admintoken");
+
+      localStorage.setItem("admintoken", data.token);
+
+      navigate("/admin/dashboard");
+
+    } catch (err) {
+      alert(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -45,24 +65,22 @@ if (data.user?.role === 2) {
       <div className="col-md-5 col-lg-4">
         <div className="card shadow-lg border-0 rounded-4">
           <div className="card-body bg-blueGray-200 p-4 p-md-5">
-            {/* Header */}
+
             <div className="text-center mb-4">
               <h3 className="fw-bold">Admin Login</h3>
               <p className="text-muted mb-0">Sign in to manage the dashboard</p>
             </div>
 
-            {/* Form */}
             <form onSubmit={handleSubmit}>
               <div className="mb-3">
                 <label className="form-label fw-semibold">Email</label>
                 <input
                   type="email"
-                  name="email" 
+                  name="email"
                   className="form-control form-control-lg"
                   placeholder="admin@example.com"
                   value={form.email}
                   onChange={handleChange}
-                  autoComplete="email"
                   required
                 />
               </div>
@@ -71,12 +89,11 @@ if (data.user?.role === 2) {
                 <label className="form-label fw-semibold">Password</label>
                 <input
                   type="password"
-                  name="password" 
+                  name="password"
                   className="form-control form-control-lg"
                   placeholder="••••••••"
                   value={form.password}
                   onChange={handleChange}
-                  autoComplete="current-password"
                   required
                 />
               </div>
@@ -96,34 +113,28 @@ if (data.user?.role === 2) {
                 </span>
               </div>
 
-              <button className="btn btn-primary btn-lg w-100 mb-3">
-                Login
+              <button
+                className="btn btn-primary btn-lg w-100 mb-3"
+                disabled={loading}
+              >
+                {loading ? "Logging in..." : "Login"}
               </button>
             </form>
 
-            {/* Divider */}
             <div className="text-center my-3 text-muted">OR</div>
 
-            {/* Social login */}
             <div className="d-flex justify-content-center gap-3">
-              <button className="btn btn-outline-secondary d-flex align-items-center justify-content-center rounded-circle p-3">
+              <button className="btn btn-outline-none rounded-circle p-3">
                 <img src={githubIcon} width="22" alt="Github" />
               </button>
 
-              <button className="btn btn-outline-danger d-flex align-items-center justify-content-center rounded-circle p-3">
+              <button className="btn btn-outline-none rounded-circle p-3">
                 <img src={googleIcon} width="22" alt="Google" />
               </button>
             </div>
+
           </div>
         </div>
-
-        {/* Footer
-        <div className="text-center mt-4">
-          <span className="text-muted">New here?</span>{" "}
-          <Link to="/admin/register" className="fw-semibold">
-            Create account
-          </Link>
-        </div> */}
       </div>
     </div>
   );

@@ -19,30 +19,24 @@ export default function Index() {
               <p className="mt-4 text-lg leading-relaxed text-blueGray-500">
                 Notus React is Free and Open Source. It does not change any of
                 the CSS from{" "}
-                <a
-                  href="#!"
-                  className="text-blueGray-600"
-                  
-                >
+                <a href="#!" className="text-blueGray-600">
                   Tailwind CSS
                 </a>
                 . It features multiple HTML elements and it comes with dynamic
                 components for ReactJS, Vue and Angular.
               </p>
-              <div className="mt-12">
+              <div className="mt-5">
                 <a
                   href="https://www.creative-tim.com/learning-lab/tailwind/react/overview/notus?ref=nr-index&_ga=2.151943674.235871103.1753154769-1688634302.1752550566"
-                    target="_blank"
-                  
+                  target="_blank"
                   className="get-started text-white font-bold px-6 py-4 rounded outline-none focus:outline-none mr-1 mb-1 bg-lightBlue-500 active:bg-lightBlue-600 uppercase text-sm shadow hover:shadow-lg ease-linear transition-all duration-150"
                 >
                   Get started
                 </a>
                 <a
                   href="https://github.com/themewagon/Notus-React"
-                    target="_blank"
+                  target="_blank"
                   className="github-star ml-1 text-white font-bold px-6 py-4 rounded outline-none focus:outline-none mr-1 mb-1 bg-blueGray-700 active:bg-blueGray-600 uppercase text-sm shadow hover:shadow-lg ease-linear transition-all duration-150"
-                  
                 >
                   Github Star
                 </a>
@@ -219,7 +213,6 @@ export default function Index() {
               </div>
               <a
                 href="#!"
-                
                 className="font-bold text-blueGray-700 hover:text-blueGray-500 ease-linear transition-all duration-150"
               >
                 View All{" "}
@@ -267,10 +260,7 @@ export default function Index() {
             <div className="w-full md:w-6/12 px-4 mr-auto ml-auto mt-32">
               <div className="justify-center flex flex-wrap relative">
                 <div className="my-4 w-full lg:w-6/12 px-4">
-                  <a
-                    href="#!"
-                    
-                  >
+                  <a href="#!">
                     <div className="bg-red-600 shadow-lg rounded-lg text-center p-8">
                       <img
                         alt="..."
@@ -282,10 +272,7 @@ export default function Index() {
                       </p>
                     </div>
                   </a>
-                  <a
-                    href="#!"
-                    
-                  >
+                  <a href="#!">
                     <div className="bg-lightBlue-500 shadow-lg rounded-lg text-center p-8 mt-8">
                       <img
                         alt="..."
@@ -297,10 +284,7 @@ export default function Index() {
                       </p>
                     </div>
                   </a>
-                  <a
-                    href="#!"
-                    
-                  >
+                  <a href="#!">
                     <div className="bg-blueGray-700 shadow-lg rounded-lg text-center p-8 mt-8">
                       <img
                         alt="..."
@@ -314,10 +298,7 @@ export default function Index() {
                   </a>
                 </div>
                 <div className="my-4 w-full lg:w-6/12 px-4 lg:mt-16">
-                  <a
-                    href="#!"
-                    
-                  >
+                  <a href="#!">
                     <div className="bg-yellow-500 shadow-lg rounded-lg text-center p-8">
                       <img
                         alt="..."
@@ -329,10 +310,7 @@ export default function Index() {
                       </p>
                     </div>
                   </a>
-                  <a
-                    href="#!"
-                    
-                  >
+                  <a href="#!">
                     <div className="bg-red-700 shadow-lg rounded-lg text-center p-8 mt-8">
                       <img
                         alt="..."
@@ -344,10 +322,7 @@ export default function Index() {
                       </p>
                     </div>
                   </a>
-                  <a
-                    href="#!"
-                    
-                  >
+                  <a href="#!">
                     <div className="bg-emerald-500 shadow-lg rounded-lg text-center p-8 mt-8">
                       <img
                         alt="..."
@@ -407,7 +382,6 @@ export default function Index() {
               </div>
               <a
                 href="#!"
-                
                 className="font-bold text-blueGray-700 hover:text-blueGray-500 ease-linear transition-all duration-150"
               >
                 View all{" "}
@@ -494,7 +468,7 @@ export default function Index() {
           </div>
         </div>
 
-        <div className="justify-center text-center flex flex-wrap mt-24">
+        <div className="justify-center text-center flex flex-wrap mt-5">
           <div className="w-full md:w-6/12 px-12 md:px-4">
             <h2 className="font-semibold text-4xl">Beautiful Example Pages</h2>
             <p className="text-lg leading-relaxed mt-4 mb-4 text-blueGray-500">
@@ -509,7 +483,7 @@ export default function Index() {
       <section className="block relative z-1 bg-blueGray-600">
         <div className="container mx-auto">
           <div className="justify-center flex flex-wrap">
-            <div className="w-full lg:w-12/12 px-4  -mt-24">
+            <div className="w-full lg:w-12/12 px-4  -mt-5">
               <div className="flex flex-wrap">
                 <div className="w-full lg:w-4/12 px-4">
                   <h5 className="text-xl font-semibold pb-4 text-center">
@@ -573,11 +547,7 @@ export default function Index() {
               </h3>
               <p className="text-lg font-light leading-relaxed mt-4 mb-4 text-blueGray-400">
                 Since{" "}
-                <a
-                  href="#!"
-                  className="text-blueGray-300"
-                  
-                >
+                <a href="#!" className="text-blueGray-300">
                   Tailwind CSS
                 </a>{" "}
                 is an open source project we wanted to continue this movement
@@ -591,7 +561,6 @@ export default function Index() {
               <a
                 href="https://github.com/themewagon/Notus-React"
                 target="_blank"
-                
                 className="github-star mt-4 inline-block text-white font-bold px-6 py-4 rounded outline-none focus:outline-none mr-1 mb-1 bg-blueGray-700 active:bg-blueGray-600 uppercase text-sm shadow hover:shadow-lg"
               >
                 Github Star
@@ -645,16 +614,14 @@ export default function Index() {
               <div className="sm:block flex flex-col mt-10">
                 <a
                   href="https://www.creative-tim.com/learning-lab/tailwind/react/overview/notus?ref=nr-index&_ga=2.151943674.235871103.1753154769-1688634302.1752550566"
-                    target="_blank"
-                  
+                  target="_blank"
                   className="get-started text-white font-bold px-6 py-4 rounded outline-none focus:outline-none mr-1 mb-2 bg-lightBlue-500 active:bg-lightBlue-600 uppercase text-sm shadow hover:shadow-lg ease-linear transition-all duration-150"
                 >
                   Get started
                 </a>
                 <a
                   href="https://github.com/themewagon/Notus-React"
-                    target="_blank"
-                  
+                  target="_blank"
                   className="github-star sm:ml-1 text-white font-bold px-6 py-4 rounded outline-none focus:outline-none mr-1 mb-1 bg-blueGray-700 active:bg-blueGray-600 uppercase text-sm shadow hover:shadow-lg"
                 >
                   <i className="fab fa-github text-lg mr-1"></i>

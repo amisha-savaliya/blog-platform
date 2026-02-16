@@ -229,16 +229,25 @@ router.get("/slug/:slug", verifyToken, (req, res) => {
 
   const postSql = `
     SELECT 
-      post.*,
-      users.name AS author,
-      categories.name AS category,
-      (SELECT COUNT(*) FROM post_view WHERE post_id = post.id) AS views,
-      (SELECT COUNT(*) FROM post_likes WHERE post_id = post.id) AS totalLikes,
-      (SELECT COUNT(*) FROM comments WHERE post_id = post.id AND is_delete = 0) AS commentCount
-    FROM post
-    LEFT JOIN users ON post.user_id = users.id
-    LEFT JOIN categories ON post.cat_id = categories.id
-    WHERE post.slug = ?
+  post.id,
+  post.title,
+  post.content,
+  post.image,
+  post.user_id,
+  post.cat_id AS category_id,
+  post.slug,
+  post.created_at,
+  post.updated_at,
+  users.name AS author,
+  categories.name AS category,
+  (SELECT COUNT(*) FROM post_view WHERE post_id = post.id) AS views,
+  (SELECT COUNT(*) FROM post_likes WHERE post_id = post.id) AS totalLikes,
+  (SELECT COUNT(*) FROM comments WHERE post_id = post.id AND is_delete = 0) AS commentCount
+FROM post
+LEFT JOIN users ON post.user_id = users.id
+LEFT JOIN categories ON post.cat_id = categories.id
+WHERE post.slug = ?
+
   `;
 
   db.query(postSql, [slug], (err, posts) => {
@@ -252,18 +261,22 @@ router.get("/slug/:slug", verifyToken, (req, res) => {
 router.put("/update/:id", verifyToken, (req, res) => {
   const postId = req.params.id;
   const userId = req.user.impersonatedUserId || req.user.id;
+ 
+
+  const isAdmin = req.user.role === "admin";
+
+const sql = isAdmin
+  ? `UPDATE post SET title=?, content=?, cat_id=?, image=?, slug=? WHERE id=?`
+  : `UPDATE post SET title=?, content=?, cat_id=?, image=?, slug=? WHERE id=? AND user_id=?`;
+
 
   const { title, content, category, image, slug } = req.body;
+  // console.log(req.body);
 
   if (!title || !content || !slug || !category || !image) {
     return res.status(400).json({ message: "All fields are required" });
   }
 
-  const sql = `
-    UPDATE post 
-    SET title = ?, content = ?, cat_id = ?, image = ?, slug = ?
-    WHERE id = ? AND user_id = ?
-  `;
 
   db.query(
     sql,
@@ -274,7 +287,7 @@ router.put("/update/:id", verifyToken, (req, res) => {
       if (!result.affectedRows)
         return res.status(403).json({ msg: "Not allowed or post not found" });
 
-      res.json({ msg: "Updated" });
+      res.json({ msg: "Updated", slug });
     },
   );
 });

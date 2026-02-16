@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import CommentModal from "./CommentModel";
+import CommentModal from "./UserCommentModel";
 import { useAuth } from "../../context/Authcontext";
 
 export default function Posts() {
@@ -25,10 +25,8 @@ export default function Posts() {
   const token = localStorage.getItem("admintoken");
   useEffect(() => {
     if (!token) return;
-  },[]);
+  }, []);
   const limit = 6;
-
-
 
   const [showComments, setShowComments] = useState(false);
   const [selectedPostId, setSelectedPostId] = useState(null);
@@ -78,11 +76,10 @@ export default function Posts() {
     setCurrentPage(1);
   }, [searchQuery]);
 
-useEffect(() => {
-  if (debouncedSearch && debouncedSearch.length < 3) {
-  
-    return;
-  }
+  useEffect(() => {
+    if (debouncedSearch && debouncedSearch.length < 3) {
+      return;
+    }
 
     fetch(
       `http://localhost:5000/posts?search=${encodeURIComponent(
@@ -124,21 +121,20 @@ useEffect(() => {
       year: "numeric",
       hour12: true,
     });
-const SearchHighlight = (text) => {
-  if (!debouncedSearch || debouncedSearch.length < 3) return text;
+  const SearchHighlight = (text) => {
+    if (!debouncedSearch || debouncedSearch.length < 3) return text;
 
-  const regex = new RegExp(`(${debouncedSearch})`, "gi");
-  return text.split(regex).map((part, i) =>
-    part.toLowerCase() === debouncedSearch.toLowerCase() ? (
-      <mark key={i} style={{ backgroundColor: "yellow", fontWeight: "bold" }}>
-        {part}
-      </mark>
-    ) : (
-      part
-    )
-  );
-};
-
+    const regex = new RegExp(`(${debouncedSearch})`, "gi");
+    return text.split(regex).map((part, i) =>
+      part.toLowerCase() === debouncedSearch.toLowerCase() ? (
+        <mark key={i} style={{ backgroundColor: "yellow", fontWeight: "bold" }}>
+          {part}
+        </mark>
+      ) : (
+        part
+      ),
+    );
+  };
 
   const addComment = async (text) => {
     const res = await fetch("http://localhost:5000/comment/add", {
@@ -186,97 +182,139 @@ const SearchHighlight = (text) => {
   };
 
   return (
-    <div className="container section py-5 mt-24">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2 className="heading text-primary">Blog Posts</h2>
+   <div className="grid gap-6 
+  grid-cols-1 
+  sm:grid-cols-2 
+  lg:grid-cols-3 
+  xl:grid-cols-4">
 
-        {searchQuery && (
-          <small className="text-muted">
-            Showing results for "<b>{searchQuery}</b>"
-          </small>
-        )}
+     <div className=" rounded-xl shadow-md overflow-hidden flex flex-col">
 
-        <button
-          className="btn btn-primary"
-          onClick={() => navigate("/admin/posts/add")}
-        >
-          + Add Blog
-        </button>
+        <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
+          {/* LEFT SIDE */}
+          <div className="d-flex align-items-center gap-lg-5 p-2 gap-md-5 sm">
+            <h2 className="fw-bold text-primary-emphasis m-0">
+              <i className="fa-solid fa-newspaper me-2"></i>
+              Blog Posts
+            </h2>
+
+            {searchQuery && (
+              <small className="text-muted">
+                Results for "<b>{searchQuery}</b>"
+              </small>
+            )}
+          </div>
+
+          <div className="d-flex align-items-center gap-3 flex-wrap p-2">
+            <div
+              style={{ minWidth: "260px" }}
+              className="pt-2 d-flex align-items-center gap-2"
+            >
+              <input
+                type="text"
+                placeholder="🔍 Search posts..."
+                className="form-control"
+                value={searchQuery}
+                onChange={(e) =>
+                  navigate(`/admin/posts?search=${e.target.value}`)
+                }
+              />
+            </div>
+
+            <button
+              className="btn btn-primary px-4 shadow-sm"
+              onClick={() => navigate("/admin/posts/add")}
+            >
+              <i className="fa fa-plus me-2"></i>
+              Add Blog
+            </button>
+          </div>
+        </div>
       </div>
 
       {posts.length === 0 && <p>No posts found.</p>}
 
       <div className="row g-4">
         {posts.map((post) => (
-          <div className="col-md-4" key={post.id}>
-            <div
-              className="post-entry bg-white p-3 shadow-sm rounded"
-              style={{ minHeight: "520px" }}
-            >
-              <img
-                src={post.image}
-                className="img-fluid mb-3 rounded"
-                alt=""
-                style={{ height: "250px", width: "100%", objectFit: "cover" }}
-              />
+          <div className="col-md-4 " key={post.id}>
+            <div className="card h-100 shadow-sm border-0 rounded-4 post-card">
+              {/* IMAGE */}
+              <div className="position-relative">
+                <img
+                  src={post.image}
+                   className="w-full h-48 object-cover"
+                  alt=""
+                  style={{ height: "280px", objectFit: "cover" }}
+                />
 
-              <h4>{SearchHighlight(post.title)}</h4>
-
-              <span className="d-block text-primary">
-                By <span className="text-muted">{post.author}</span>
-              </span>
-
-              <span className="d-block text-primary">
-                {SearchHighlight(post.category)}
-              </span>
-
-              <p className="mt-2">
-                {SearchHighlight((post.content || "").substring(0, 100))}...
-              </p>
-
-              <div className="d-flex align-items-center gap-2 mt-3 mb-2">
-                <button
-                  className="btn btn-sm btn-primary"
-                  onClick={() => navigate(`/admin/post/${post.slug}`)}
-                >
-                  <i className="fa-solid fa-eye"></i>
-                </button>
-
-                <button
-                  className="btn btn-sm btn-warning"
-                  onClick={() => navigate(`/admin/edit-post/${post.slug}`)}
-                >
-                  <i className="fa-solid fa-pen"></i>
-                </button>
-
-                <button
-                  className="btn btn-sm btn-danger"
-                  onClick={() => removePost(post.slug)}
-                >
-                  <i className="fa-solid fa-trash"></i>
-                </button>
-
-                <small className="text-muted ms-auto">
-                  {formattedDate(post.created_at)}
-                </small>
+                {/* CATEGORY BADGE */}
+                <span className="badge bg-primary position-absolute top-0 start-0 m-2 px-3 py-2 rounded-pill">
+                  {post.category}
+                </span>
               </div>
-              {/* card footer*/}
-              <div className=" card-footer d-flex gap-4 align-items-center mt-4 mb-3 fs-6">
+
+              {/* BODY */}
+              <div className="card-body d-flex flex-column">
+                <h5 className="text-lg font-semibold line-clamp-2">{SearchHighlight(post.title)}</h5>
+
+                <small className="text-muted mb-2 mt-0">
+                  By  <b>{post.author} </b>•   {formattedDate(post.created_at)}
+                </small>
+
+                <p className="text-muted small flex-grow-1 fs-6 line-clamp-3">
+                  {SearchHighlight((post.content || "").substring(0, 110))}...
+                </p>
+
+                {/* ACTION BUTTONS */}
+                <div className="d-flex justify-content-between align-items-center mt-2 ">
+                  <div className="btn-group btn-group-sm gap-3">
+                    <button
+                      className="btn btn-light border "
+                      onClick={() => navigate(`/admin/post/${post.slug}`)}
+                    >
+                      <i className="fa-solid fa-eye text-primary"></i>
+                    </button>
+                    <button
+                      className="btn btn-light border"
+                      onClick={() => navigate(`/admin/edit-post/${post.slug}`)}
+                    >
+                      <i className="fa-solid fa-pen text-warning"></i>
+                    </button>
+                    <button
+                      className="btn btn-light border"
+                      onClick={() => removePost(post.slug)}
+                    >
+                      <i className="fa-solid fa-trash text-danger"></i>
+                    </button>
+                  </div>
+                  {/* <span className="text-muted small">
+                    {formattedDate(post.created_at)}
+                  </span> */}
+                </div>
+              </div>
+
+              {/* FOOTER */}
+              <div className="card-footer bg-white border-0 mt-auto flex justify-between items-center pt-4">
                 <button
-                  className={post.userLiked ? "text-danger " : "text-muted "}
+                  className={
+                    post.userLiked ? "text-danger fw-semibold" : "text-muted"
+                  }
                   onClick={() => handleLike(post.id)}
                 >
                   {post.userLiked ? "❤️ " : "🤍 "} {post.totalLikes || 0}
                 </button>
+
                 <button
-                  className="text-black fs-50"
+                  className="text-muted"
                   onClick={() => openComments(post.id)}
                 >
                   <i className="fa-regular fa-comment"></i> {post.commentCount}
                 </button>
-                <button className={"text-primary fw-bold me-1"}>
-                  <i className="fa fa-eye"></i> {post.views}
-                </button>
+
+                <span className="text-muted">
+                  <i className="fa-solid fa-eye me-1"></i>
+                  {post.views}
+                </span>
               </div>
             </div>
           </div>

@@ -39,10 +39,10 @@ export default function RetroSection() {
     };
 
     getPosts();
-    return () => controller.abort(); // 🛑 cancel request on unmount
+    return () => controller.abort(); 
   }, []);
 
-  // 🧠 Memoized featured posts (performance)
+
   const featured = useMemo(() => {
     return [...posts].reverse().slice(0, 7);
   }, [posts]);
@@ -51,7 +51,7 @@ export default function RetroSection() {
   if (error) return <p className="text-danger text-center py-5">{error}</p>;
 
   return (
-    <section className="section bg-light">
+    <section className="section">
       <div className="container">
 
         {user && (
@@ -89,7 +89,7 @@ export default function RetroSection() {
   );
 }
 
-// 🧩 Reusable Post Card Component
+
 function PostCard({ post, formatDate, big }) {
   return (
     <NavLink

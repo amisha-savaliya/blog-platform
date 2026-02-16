@@ -4,7 +4,6 @@ import { useCategories } from "../../context/Categorycontext";
 
 export default function EditPost() {
   const { slug } = useParams();
-
   const cleanSlug = slug?.replace(/}$/, "");
 
   const navigate = useNavigate();
@@ -15,34 +14,34 @@ export default function EditPost() {
   const [postId, setPostId] = useState(null);
   const [slugPreview, setSlugPreview] = useState("");
   const [loading, setLoading] = useState(false);
+  const [imagePreview, setImagePreview] = useState("");
+
   function slugify(value) {
     return value
       .toLowerCase()
       .trim()
       .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "")
-      .replace(/}$/, "");
+      .replace(/^-+|-+$/g, "");
   }
 
+  /* ---------------- FETCH POST ---------------- */
   useEffect(() => {
-    if (!slug) return; //
-    console.log(slug);
+    if (!cleanSlug || !token) return;
 
     fetch(`http://localhost:5000/posts/slug/${cleanSlug}`, {
       headers: { Authorization: "Bearer " + token },
     })
       .then((res) => res.json())
       .then((data) => {
-        setForm({
-          ...data,
-          category: Number(data.category_id || data.category),
-        });
+        setForm({ ...data, category_id: Number(data.category_id) });
         setPostId(data.id);
         setSlugPreview(data.slug);
+        setImagePreview(data.image);
       })
       .catch(console.error);
-  }, [slug]);
+  }, [cleanSlug, token]);
 
+  /* ---------------- IMAGE UPLOAD ---------------- */
   async function uploadImage(file) {
     const data = new FormData();
     data.append("file", file);
@@ -50,53 +49,67 @@ export default function EditPost() {
 
     const res = await fetch(
       "https://api.cloudinary.com/v1_1/dn2c84jdt/image/upload",
-      { method: "POST", body: data },
+      { method: "POST", body: data }
     );
 
     const result = await res.json();
     return result.secure_url;
   }
 
+  /* ---------------- UPDATE POST ---------------- */
   const handleUpdate = async () => {
-    setLoading(true);
+    try {
+      setLoading(true);
 
-    let imageUrl = form.image;
-    if (form.image instanceof File) {
-      imageUrl = await uploadImage(form.image);
+      let imageUrl = imagePreview;
+      if (form.image instanceof File) {
+        imageUrl = await uploadImage(form.image);
+      }
+
+      const res = await fetch(`http://localhost:5000/posts/update/${postId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: "Bearer " + token,
+        },
+        body: JSON.stringify({
+          title: form.title,
+          content: form.content,
+          image: imageUrl,
+          slug: slugPreview,
+          category_id: form.category_id, // ✅ FIXED
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.msg || "Update failed");
+
+      alert("Post updated successfully!");
+
+      // redirect to post view
+      navigate(`/admin/post/${data.slug}`);
+    } catch (err) {
+      console.error(err);
+      alert(err.message);
+    } finally {
+      setLoading(false);
     }
-
-    const res = await fetch(`http://localhost:5000/posts/update/${postId}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + token,
-      },
-      body: JSON.stringify({ ...form, image: imageUrl, slug: slugPreview }),
-    });
-
-    const data = await res.json();
-
-    alert("Post updated successfully");
-    navigate(-1);
-
-    //  Redirect if slug changed
-    navigate(`/admin/edit-post/${data.slug}`, { replace: true });
   };
 
   if (!form) return <div className="container mt-5">Loading...</div>;
 
   const selectedCategory = categories.find(
-  c => Number(c.id) === Number(form.category)
-);
-
+    (c) => Number(c.id) === Number(form.category_id)
+  );
 
   return (
     <div className="container mt-5 py-5">
-      <div className="card p-4 shadow">
-      <div className="d-flex justify-content-between">
-        <h3 className="heading text-primary fw-bold">Edit Post</h3>
-        <button className="btn btn-primary" onClick={() => navigate(-1)}>
-          Back
+      <div className="card p-4 shadow rounded-4">
+        <div className="d-flex justify-content-between mb-3">
+          <h3 className="fw-bold text-primary">Edit Post</h3>
+          <button className="btn btn-light border" onClick={() => navigate(-1)}>
+            Back
           </button>
         </div>
 
@@ -110,23 +123,33 @@ export default function EditPost() {
           }}
         />
 
-        <small className="text-muted mb-2">
-          Slug: <strong>{slugPreview}</strong>
-        </small>
+        <small className="text-muted">Slug: {slugPreview}</small>
 
         <input
           type="file"
           className="form-control my-2"
-          onChange={(e) => setForm({ ...form, image: e.target.files[0] })}
+          onChange={(e) => {
+            const file = e.target.files[0];
+            setForm({ ...form, image: file });
+            setImagePreview(URL.createObjectURL(file));
+          }}
         />
-        {form.image && (
-          <img src={form.image} alt="Post" className="img-fluid mb-2" />
+
+        {imagePreview && (
+          <img
+            src={imagePreview}
+            alt="Preview"
+            className="img-fluid rounded mb-2"
+            style={{ maxHeight: "450px", objectFit: "cover" }}
+          />
         )}
 
         <select
           className="form-select my-2"
-          value={form.category}
-          onChange={(e) => setForm({ ...form, category: e.target.value })}
+          value={form.category_id}
+          onChange={(e) =>
+            setForm({ ...form, category_id: Number(e.target.value) })
+          }
         >
           <option value="">-- Select Category --</option>
           {categories.map((c) => (
@@ -135,9 +158,10 @@ export default function EditPost() {
             </option>
           ))}
         </select>
-     <small className="text-muted mb-2">
-  Select category : <strong>{selectedCategory?.name || "None"}</strong>
-</small>
+
+        <small className="text-muted">
+          Current category: {selectedCategory?.name || "None"}
+        </small>
 
         <textarea
           className="form-control my-2"
@@ -146,16 +170,16 @@ export default function EditPost() {
           onChange={(e) => setForm({ ...form, content: e.target.value })}
         />
 
-        <div className="d-flex gap-2">
+        <div className="d-flex gap-2 mt-3">
           <button
-            className="btn btn-primary mt-3"
+            className="btn btn-primary"
             disabled={loading}
             onClick={handleUpdate}
           >
             {loading ? "Saving..." : "Save Changes"}
           </button>
 
-          <button className="btn btn-danger mt-3" onClick={() => navigate(-1)}>
+          <button className="btn btn-danger" onClick={() => navigate(-1)}>
             Cancel
           </button>
         </div>

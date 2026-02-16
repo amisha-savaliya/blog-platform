@@ -1,81 +1,63 @@
-import React from "react";
+import React, { useRef, useState } from "react";
 import { createPopper } from "@popperjs/core";
 
-const NotificationDropdown = () => {
-  // dropdown props
-  const [dropdownPopoverShow, setDropdownPopoverShow] = React.useState(false);
-  const btnDropdownRef = React.createRef();
-  const popoverDropdownRef = React.createRef();
-  const openDropdownPopover = () => {
-    console.log("hey");
-    createPopper(btnDropdownRef.current, popoverDropdownRef.current, {
-      placement: "bottom-start",
-    });
-    setDropdownPopoverShow(true);
-  };
-  const closeDropdownPopover = () => {
-    setDropdownPopoverShow(false);
-  };
-  return (
-    <>
-      <a
-        className="text-blueGray-500 block py-1 px-3"
-        href="#"
-        ref={btnDropdownRef}
-        onClick={(e) => {
-          e.preventDefault();
-          dropdownPopoverShow ? closeDropdownPopover() : openDropdownPopover();
-        }}
-      >
-        <i className="fas fa-bell"></i>
-      </a>
-      <div
-        ref={popoverDropdownRef}
-        className={
-          (dropdownPopoverShow ? "block " : "hidden ") +
-          "bg-white text-base z-50 float-left py-2 list-none text-left rounded shadow-lg mt-1 min-w-48"
-        }
-      >
-        <a
-          href="#"
-          className={
-            "text-sm py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent text-blueGray-700"
-          }
-          onClick={(e) => e.preventDefault()}
-        >
-          Action
-        </a>
-        <a
-          href="#"
-          className={
-            "text-sm py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent text-blueGray-700"
-          }
-          onClick={(e) => e.preventDefault()}
-        >
-          Another action
-        </a>
-        <a
-          href="#"
-          className={
-            "text-sm py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent text-blueGray-700"
-          }
-          onClick={(e) => e.preventDefault()}
-        >
-          Something else here
-        </a>
-        <div className="h-0 my-2 border border-solid border-blueGray-100" />
-        <a
-          href="#"
-          className={
-            "text-sm py-2 px-4 font-normal block w-full whitespace-nowrap bg-transparent text-blueGray-700"
-          }
-          onClick={(e) => e.preventDefault()}
-        >
-          Seprated link
-        </a>
-      </div>
-    </>
-  );
-};
+export default function NotificationDropdown() {
+  const [open, setOpen] = useState(false);
 
-export default NotificationDropdown;
+  // ✅ useRef (NOT createRef inside component)
+  const btnRef = useRef(null);
+  const popRef = useRef(null);
+
+  const toggleDropdown = () => {
+    if (open) {
+      setOpen(false);
+    } else {
+      createPopper(btnRef.current, popRef.current, {
+        placement: "bottom-end",
+        modifiers: [
+          {
+            name: "offset",
+            options: { offset: [0, 10] },
+          },
+        ],
+      });
+      setOpen(true);
+    }
+  };
+
+  return (
+    <div className="relative">
+      {/* BUTTON */}
+      <button
+        ref={btnRef}
+        onClick={toggleDropdown}
+        className="text-blueGray-500 block py-1 px-3 focus:outline-none"
+      >
+        <i className="fas fa-bell text-lg"></i>
+      </button>
+
+      {/* DROPDOWN */}
+      <div
+        ref={popRef}
+        className={`${
+          open ? "block" : "hidden"
+        } bg-white text-base z-50 py-2 rounded shadow-lg mt-2 min-w-[12rem]`}
+      >
+        {["Action", "Another action", "Something else here"].map((item) => (
+          <button
+            key={item}
+            className="text-sm py-2 px-4 w-full text-left text-blueGray-700 hover:bg-blueGray-100"
+          >
+            {item}
+          </button>
+        ))}
+
+        <div className="h-0 my-2 border border-solid border-blueGray-100" />
+
+        <button className="text-sm py-2 px-4 w-full text-left text-blueGray-700 hover:bg-blueGray-100">
+          Separated link
+        </button>
+      </div>
+    </div>
+  );
+}

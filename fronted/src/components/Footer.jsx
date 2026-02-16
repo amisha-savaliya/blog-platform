@@ -11,9 +11,10 @@ export default function Footer() {
 
           {/* Left: Copyright */}
           <div className="col-md-6 mb-3 mb-md-0 text-center">
-            <p className="fw-light mb-0">
-              © {new Date().getFullYear()}|BlogNest | <strong></strong>. All rights reserved.
-            </p>
+           <p className="fw-light mb-0">
+  © {new Date().getFullYear()} BlogNest. All rights reserved.
+</p>
+
           </div> 
 
 

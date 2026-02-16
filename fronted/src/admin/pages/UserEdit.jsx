@@ -1,12 +1,14 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
+import EditForm from "../components/Edit/EditForm";
 
-const UserEdit = () => {
+export default function UserEdit() {
   const navigate = useNavigate();
   const location = useLocation();
   const token = localStorage.getItem("admintoken");
-
   const { userId } = location.state || {};
+
+  const [loading, setLoading] = useState(false);
 
   const [form, setForm] = useState({
     name: "",
@@ -16,35 +18,32 @@ const UserEdit = () => {
 
   useEffect(() => {
     if (!token) return navigate("/login");
-    if (!userId) return navigate("/admin/users"); // 🔥 safety
+    if (!userId) return navigate("/admin/users");
 
     fetch(`http://localhost:5000/users/adminuser?id=${userId}`, {
       headers: { Authorization: "Bearer " + token },
     })
       .then((res) => res.json())
-      .then((data) => {
+      .then((data) =>
         setForm({
-          name: data.name,
-          email: data.email,
-          password: "", // NEVER preload password
-        });
-      })
+          name: data.name || "",
+          email: data.email || "",
+          password: "",
+        }),
+      )
       .catch(console.error);
-  }, [token, userId, navigate]); // 🔥 added userId
+  }, [token, userId, navigate]);
 
-  const handleChange = (e) => {
+  const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
-  };
 
   const handleSave = async () => {
-    const updateData = {
-      name: form.name,
-      email: form.email,
-    };
+    if (!form.name.trim()) return alert("Name required");
 
-    if (form.password.trim()) {
-      updateData.password = form.password;
-    }
+    setLoading(true);
+
+    const updateData = { name: form.name, email: form.email };
+    if (form.password.trim()) updateData.password = form.password;
 
     const res = await fetch(`http://localhost:5000/users/adminuser/${userId}`, {
       method: "PUT",
@@ -56,6 +55,7 @@ const UserEdit = () => {
     });
 
     const data = await res.json();
+    setLoading(false);
 
     if (!res.ok) return alert(data.msg || "Update failed");
 
@@ -64,50 +64,22 @@ const UserEdit = () => {
   };
 
   return (
-    <div className="container mt-5">
-      <button className="btn btn-primary" onClick={() => navigate(-1)}>
-        ⬅ Back
+    <div className="container py-5 mt-3" style={{ maxWidth: "720px" }}>
+      <button
+        className="btn btn-light border mb-3"
+        onClick={() => navigate(-1)}
+      >
+        ← Back
       </button>
 
-      <div className="card shadow p-4 col-md-6 mx-auto">
-        <h3>Edit User</h3>
-
-        <input
-          className="form-control mb-3"
-          name="name"
-          value={form.name}
-          onChange={handleChange}
-          placeholder="Name"
-        />
-
-        <input
-          className="form-control mb-3"
-          name="email"
-          value={form.email}
-          onChange={handleChange}
-          placeholder="Email"
-        />
-
-        <input
-          type="password"
-          className="form-control mb-3"
-          name="password"
-          value={form.password}
-          onChange={handleChange}
-          placeholder="New Password (optional)"
-        />
-
-        <div className="text-end">
-          <button className="btn btn-secondary me-2" onClick={() => navigate(-1)}>
-            Cancel
-          </button>
-          <button className="btn btn-primary" onClick={handleSave}>
-            Save Changes
-          </button>
-        </div>
-      </div>
+      <EditForm
+        form={form}
+        onChange={handleChange}
+        onSubmit={handleSave}
+        loading={loading}
+        title="Edit User Account"
+        subtitle="Update user information and credentials"
+      />
     </div>
   );
-};
-
-export default UserEdit;
+}

@@ -69,7 +69,7 @@ export default function ResetPassword() {
     }
   };
 
-  // ⏳ LOADING STATE WHILE VERIFYING TOKEN
+  // LOADING STATE WHILE VERIFYING TOKEN
   if (checkingToken) {
     return (
       <div className="vh-100 d-flex justify-content-center align-items-center">
@@ -78,7 +78,7 @@ export default function ResetPassword() {
     );
   }
 
-  // 🚫 INVALID / USED / EXPIRED LINK POPUP PAGE
+  //  INVALID / USED / EXPIRED LINK POPUP PAGE
   if (showPopup) {
     return (
       <div className="container-fluid vh-100 d-flex align-items-center justify-content-center bg-light">
@@ -95,7 +95,7 @@ export default function ResetPassword() {
     );
   }
 
-  // ✅ VALID LINK → SHOW RESET FORM
+  // VALID LINK → SHOW RESET FORM
   return (
     <div className="container-fluid vh-100 d-flex align-items-center justify-content-center bg-light">
       <div className="col-md-5 col-lg-4">

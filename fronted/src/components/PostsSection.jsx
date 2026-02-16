@@ -39,13 +39,13 @@ export default function PostsSection() {
     return () => controller.abort();
   }, []);
 
-  // 🧠 Memoized Business posts
+ 
   const { bigPosts, sidePosts } = useMemo(() => {
     const business = posts.filter(
       (p) => p.category?.toLowerCase() === "business",
     );
 
-    const sorted = [...business].reverse(); // safe copy
+    const sorted = [...business].reverse(); 
 
     return {
       bigPosts: sorted.slice(0, 2),

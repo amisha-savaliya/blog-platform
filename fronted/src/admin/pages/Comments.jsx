@@ -65,10 +65,10 @@ export default function Comments() {
     });
 
   return (
-    <div className="container px-4 mt-24 py-5">
+    <div className="md:px-10 py-4 space-y-6 mt-2">
       <div
-        className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3"
-        style={{ position: "relative", zIndex: 5 }} // 👈 IMPORTANT
+        className="  p-4 shadow-sm rounded d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3"
+        style={{ position: "relative", zIndex: 5 }}
       >
         <h2 className="fw-bold text-primary m-0">💬 Comment Moderation</h2>
 
@@ -90,6 +90,7 @@ export default function Comments() {
             <table className="table align-middle mb-0">
               <thead className="bg-light text-muted text-uppercase small">
                 <tr>
+                <th></th>
                   <th>User</th>
                   <th>Comment</th>
                   <th>Post</th>
@@ -108,6 +109,7 @@ export default function Comments() {
                 ) : (
                   filteredComments.map((c) => (
                     <tr key={c.id} className={c.is_delete ? "opacity-50" : ""}>
+                    <td></td>
                       <td className="fw-semibold">{c.user_name}</td>
 
                       <td style={{ maxWidth: "380px" }}>

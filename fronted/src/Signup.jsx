@@ -76,7 +76,7 @@ export default function Signup() {
   };
 
   return (
-    <div className="container py-5">
+    <div className="container py-10 mt-16">
       <div className="row justify-content-center">
         <div className="col-md-6 col-lg-5">
           <div className="card shadow border-0 rounded-4">

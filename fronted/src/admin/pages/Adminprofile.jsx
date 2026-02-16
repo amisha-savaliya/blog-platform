@@ -4,7 +4,7 @@ import { useCategories } from "../../context/Categorycontext";
 
 import { jwtDecode } from "jwt-decode";
 import { useMemo } from "react";
-import CommentModal from "./CommentModel";
+import CommentModal from "./UserCommentModel";
 
 export default function Adminprofile() {
   const navigate = useNavigate();
@@ -12,25 +12,9 @@ export default function Adminprofile() {
   const [posts, setPosts] = useState([]);
   const { categories } = useCategories();
   const [user, setUser] = useState(null);
-  const [modalComments, setModalComments] = useState([]);
 
   const [showComments, setShowComments] = useState(false);
-  const [selectedPostId, setSelectedPostId] = useState(null);
-
-  const openComments = async (postId) => {
-    setSelectedPostId(postId);
-
-    const res = await fetch(`http://localhost:5000/comment?post_id=${postId}`, {
-      headers: {
-        Authorization: "Bearer " + token,
-      },
-    });
-
-    const data = await res.json();
-
-    setModalComments(data);
-    setShowComments(true);
-  };
+  const [postId, setPostId] = useState(null);
 
   const token = localStorage.getItem("admintoken");
 
@@ -140,61 +124,8 @@ export default function Adminprofile() {
     });
   };
 
-  const addComment = async (text) => {
-    const res = await fetch("http://localhost:5000/comment/add", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + token,
-      },
-      body: JSON.stringify({
-        post_id: selectedPostId,
-        comment: text,
-      }),
-    });
-
-    const newComment = await res.json();
-
-    setModalComments((prev) => [...prev, newComment]);
-    setPosts((prev) =>
-      prev.map((p) =>
-        p.id === selectedPostId
-          ? { ...p, commentCount: (p.commentCount || 0) + 1 }
-          : p,
-      ),
-    );
-
-    alert("comment Added");
-  };
-
-  const deleteComment = async (id) => {
-    if (!window.confirm("Are you sure to delete comment ?")) return;
-    const res = await fetch(`http://localhost:5000/comment/${id}`, {
-      method: "DELETE",
-      headers: { Authorization: "Bearer " + token },
-    });
-    await res.json();
-
-    setModalComments((prev) => prev.filter((c) => c.id !== id));
-  };
-
-  const editComment = async (id, newText) => {
-    await fetch(`http://localhost:5000/comment/${id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: "Bearer " + token,
-      },
-      body: JSON.stringify({ comment: newText }),
-    });
-
-    setModalComments((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, comment: newText } : c)),
-    );
-  };
-
   return (
-    <div className="container py-4">
+    <div className=" md:px-10 py-6 space-y-5 mt-1">
       {/* PROFILE */}
       <div className="card shadow p-4 mb-4">
         <div className="d-flex gap-4 align-items-center">
@@ -214,7 +145,7 @@ export default function Adminprofile() {
         </div>
         <div className="mt-4 d-flex gap-1">
           <button
-            className=" btn btn-outline-primary text-primary fw-semibold"
+            className=" btn btn-outline-primary fw-semibold"
             onClick={() => navigate("/admin/edit-profile")}
             style={{ cursor: "pointer" }}
           >
@@ -222,7 +153,7 @@ export default function Adminprofile() {
           </button>
 
           <button
-            className=" btn btn-outline-danger text-danger outline-danger"
+            className=" btn btn-outline-danger  outline-danger"
             style={{ cursor: "pointer" }}
             onClick={logout}
           >
@@ -241,7 +172,9 @@ export default function Adminprofile() {
       {/* POSTS */}
       <div className="row g-4">
         <div className="d-flex justify-content-between align-items-center mb-4">
-          <h2 className="heading text-primary">My Posts</h2>
+          <h2 className="heading text-primary-emphasis fw-semibold">
+            My Posts
+          </h2>
           <button
             className="btn btn-primary"
             onClick={() => navigate("/admin/posts/add")}
@@ -251,76 +184,81 @@ export default function Adminprofile() {
         </div>
         {myPosts.map((p) => {
           return (
-            <div className="col-md-4" key={p.id}>
-              <div className="card h-100 shadow-sm">
+            <div className="col-12 col-sm-6 col-lg-4 col-xl-4" key={p.id}>
+              <div className="card  h-100 shadow-sm">
                 <img
-                  src={p.image || "/post.png"}
-                  style={{ height: "250px", width: "" }}
-                  className="card-img-top"
+                  src={p.image}
+                  className="w-100 rounded-top"
+                  style={{ height: "280px", objectFit: "cover" }}
+                  alt=""
                 />
-                <div className="card-body">
-                  <h5>{p.title}</h5>
-                  <small className="text-muted">
-                    {formattedDate(p.created_at)} • {p.category}
-                  </small>
-                  <p className="mt-2">{p.content.slice(0, 80)}...</p>
 
-                  <div className="d-flex gap-2">
-                    <button
-                      className="btn btn-sm btn-outline-info"
-                      onClick={() => navigate(`/admin/post/${p.slug}`)}
-                    >
-                      View
-                    </button>
+                <span className="badge bg-primary position-absolute top-0 start-0 m-2 px-3 py-2 rounded-pill">
+                  {p.category}
+                </span>
+                <div className="card-body d-flex flex-column">
+                  <h5 className="fw-bold mt-3 mb-1 text-break">{p.title}</h5>
 
+                  <div className="text-muted small mb-2">
+                    {p.author} • {formattedDate(p.created_at)}
+                  </div>
+
+                  <p className="text-muted small mt-2 flex-grow-1">
+                    {p.content.slice(0, 120)}...
+                  </p>
+
+                  <div className="d-flex gap-2 mt-3">
                     <button
                       className="btn btn-sm btn-outline-primary"
                       onClick={() => navigate(`/admin/edit-post/${p.slug}`)}
                     >
-                      Edit
+                      <i className="fa-solid fa-pen"></i>
                     </button>
 
                     <button
                       className="btn btn-sm btn-outline-danger"
                       onClick={() => deletePost(p.slug)}
                     >
-                      Delete
+                      <i className="fa-solid fa-trash"></i>
                     </button>
                   </div>
-                  <div className=" card-footer d-flex gap-2 align-items-center mt-1 mb-0">
-                    <button
-                      className={
-                        p.userLiked ? "text-danger fs-6" : "text-muted fs-6"
-                      }
-                      onClick={() => handleLike(p.id)}
-                    >
-                      {p.userLiked ? "❤️ " : "🤍 "} {p.totalLikes || 0}
-                    </button>
-                    <button
-                      className="btn btn-outline-none fs-6"
-                      onClick={() => openComments(p.id)}
-                    >
-                      <i className="fa-regular fa-comment"></i> {p.commentCount}
-                    </button>{" "}
-                    <button className="btn btn-outline-none fs-6">
-                      <i className="fa fa-eye"></i> {p.views}
-                    </button>
-                  </div>
+                </div>
+
+                <div className="card-footer bg-white border-0 mt-auto flex justify-between items-center pt-4">
+                  <button
+                    className={p.userLiked ? "text-danger" : "text-muted"}
+                    onClick={() => handleLike(p.id)}
+                  >
+                    {p.userLiked ? "❤️" : "🤍"} {p.totalLikes || 0}
+                  </button>
+
+                  <button
+                    className="text-muted"
+                    onClick={() => {
+                      setPostId(p.id);
+                      setShowComments(true);
+                    }}
+                  >
+                    <i className="fa-regular fa-comment"></i> {p.commentCount}
+                  </button>
+
+                  <button
+                    className="text-muted"
+                    onClick={() => navigate(`/admin/post/${p.slug}`)}
+                  >
+                    <i className="fa fa-eye"></i> {p.views}
+                  </button>
                 </div>
               </div>
             </div>
           );
         })}
       </div>
+
       <CommentModal
         show={showComments}
         onClose={() => setShowComments(false)}
-        comments={modalComments}
-        onAdd={addComment}
-        onDelete={deleteComment}
-        onEdit={editComment}
-        postId={selectedPostId}
-        currentUserId={user?.id}
+        postId={postId}
       />
     </div>
   );

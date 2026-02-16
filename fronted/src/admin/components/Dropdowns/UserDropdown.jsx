@@ -1,12 +1,12 @@
 import React from "react";
 import { createPopper } from "@popperjs/core";
-import user from "../../assets/img/user.png"
+import user from "../../assets/img/user.png";
 import { useNavigate } from "react-router-dom";
 
 const UserDropdown = () => {
   const [dropdownPopoverShow, setDropdownPopoverShow] = React.useState(false);
-  const btnDropdownRef = React.createRef();
-  const popoverDropdownRef = React.createRef();
+  const btnDropdownRef = React.useRef(null);
+  const popoverDropdownRef = React.useRef(null);
   const navigate = useNavigate();
 
   const openDropdownPopover = () => {
@@ -16,28 +16,36 @@ const UserDropdown = () => {
     setDropdownPopoverShow(true);
   };
 
-  const closeDropdownPopover = () => {
-    setDropdownPopoverShow(false);
-  };
-  // const token=localStorage.getItem("admintoken");
+  const closeDropdownPopover = () => setDropdownPopoverShow(false);
 
   const logout = () => {
-  localStorage.removeItem("admintoken");
-  // localStorage.removeItem("userToken");
-  localStorage.removeItem("impersonationToken");
+    localStorage.removeItem("admintoken");
+    localStorage.removeItem("impersonationToken");
+    navigate("/admin/login", { replace: true });
+    window.location.reload();
+  };
 
-  navigate("/admin/login", { replace: true });
+  // Close on outside click
+  React.useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        popoverDropdownRef.current &&
+        !popoverDropdownRef.current.contains(event.target) &&
+        !btnDropdownRef.current.contains(event.target)
+      ) {
+        closeDropdownPopover();
+      }
+    };
 
-  
-  window.location.reload();
-};
-
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   return (
     <>
       <button
-  type="button"
-  className="text-blueGray-500 block bg-transparent border-0"
+        type="button"
+        className="text-blueGray-500 block bg-transparent border-0"
         ref={btnDropdownRef}
         onClick={(e) => {
           e.preventDefault();
@@ -45,10 +53,10 @@ const UserDropdown = () => {
         }}
       >
         <div className="items-center flex">
-          <span className="w-12 h-12 text-sm text-white bg-blueGray-200 inline-flex items-center justify-center rounded-full">
+          <span className="w-12 h-12 bg-blueGray-200 inline-flex items-center justify-center rounded-full overflow-hidden">
             <img
               alt="Admin"
-              className="w-full rounded-full align-middle border-none shadow-lg"
+              className="w-full h-full object-cover"
               src={user}
             />
           </span>
@@ -62,29 +70,28 @@ const UserDropdown = () => {
           "bg-white text-base z-50 py-2 list-none text-left rounded shadow-lg min-w-48 right-0"
         }
       >
-        <a
+        <button
           onClick={() => navigate("/admin/profile/")}
-          className="text-sm py-2 px-4 font-normal block cursor-pointer text-blueGray-700 hover:bg-blueGray-100"
+          className="w-full text-left text-sm py-2 px-4 text-blueGray-700 hover:bg-blueGray-100"
         >
           👤 My Profile
-        </a>
+        </button>
 
-
-        <a
+        <button
           onClick={() => navigate("/admin/settings")}
-          className="text-sm py-2 px-4 font-normal block cursor-pointer text-blueGray-700 hover:bg-blueGray-100"
+          className="w-full text-left text-sm py-2 px-4 text-blueGray-700 hover:bg-blueGray-100"
         >
           ⚙️ Settings
-        </a>
+        </button>
 
         <div className="h-0 my-2 border border-solid border-blueGray-100" />
 
-        <a
-          onClick={()=>logout()}
-          className="text-sm py-2 px-4 font-normal block cursor-pointer text-red-600 hover:bg-red-100"
+        <button
+          onClick={logout}
+          className="w-full text-left text-sm py-2 px-4 text-red-600 hover:bg-red-100"
         >
           🚪 Logout
-        </a>
+        </button>
       </div>
     </>
   );

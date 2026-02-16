@@ -1766,7 +1766,7 @@ select {
   margin-top: 2.5rem;
 }
 
-.mt-12 {
+.mt-5 {
   margin-top: 3rem;
 }
 
@@ -1782,7 +1782,7 @@ select {
   margin-top: 5rem;
 }
 
-.mt-24 {
+.mt-5 {
   margin-top: 6rem;
 }
 
@@ -1818,7 +1818,7 @@ select {
   margin-left: -5rem;
 }
 
-.-mt-24 {
+.-mt-5 {
   margin-top: -6rem;
 }
 

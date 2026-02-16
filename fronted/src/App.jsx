@@ -27,12 +27,12 @@ import ResetPassword from "../Reset_password.jsx";
 
 export default function App() {
   useEffect(() => {
-  const inviteMode = sessionStorage.getItem("invite_mode");
+    const inviteMode = sessionStorage.getItem("invite_mode");
 
-  if (inviteMode && !window.location.pathname.includes("setup-account")) {
-    window.location.href = "/setup-account/:inviteToken";
-  }
-}, []);
+    if (inviteMode && !window.location.pathname.includes("setup-account")) {
+      window.location.href = "/setup-account/:inviteToken";
+    }
+  }, []);
 
   return (
     <BrowserRouter>
@@ -49,14 +49,18 @@ export default function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/edit-profile" element={<EditProfile />} />
           <Route path="/post/add" element={<Addpost />} />
-          <Route path="/login" element={<Login />} />
+
           <Route path="/edit-post/:slug" element={<EditPost />} />
-          <Route path="/setup-account/:inviteToken" element={<UserInvite />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password/:resetToken" element={<ResetPassword/>} />
-          <Route path="*" element={<NotFound /> } />
+
+          <Route path="*" element={<NotFound />} />
         </Route>
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/setup-account/:inviteToken" element={<UserInvite />} />
+
+        <Route path="/reset-password/:resetToken" element={<ResetPassword />} />
+
+        <Route path="/forgot-password" element={<ForgotPassword />} />
 
         {/* Admin Routes */}
         <Route path="/admin/login" element={<AdminLogin />} />

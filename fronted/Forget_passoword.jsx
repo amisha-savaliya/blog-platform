@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function ForgotPassword() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -21,11 +23,9 @@ export default function ForgotPassword() {
 
       const data = await res.json();
 
-      if (!res.ok) {
-        throw new Error(data.message || "Something went wrong");
-      }
+      if (!res.ok) throw new Error(data.message || "Something went wrong");
 
-      setMessage(data.message || " email exists !! , reset link was sent.");
+      setMessage("If this email exists, a reset link was sent.");
       setEmail("");
     } catch (err) {
       setError(err.message);
@@ -38,38 +38,36 @@ export default function ForgotPassword() {
     <div className="container-fluid vh-100 d-flex align-items-center justify-content-center bg-light">
       <div className="col-md-5 col-lg-4">
         <div className="card shadow-lg border-0 rounded-4">
-          <div className="card-body p-3 p-md-5">
-            <div className="text-center mb-4">
-              <h3 className="fw-bold">Forgot Password</h3>
-              <p className="text-muted mb-0">
-                Enter your email to receive a password reset link
-              </p>
-            </div>
+          <div className="card-body p-4">
+            <h3 className="text-center mb-3">Forgot Password</h3>
 
             {message && <div className="alert alert-success">{message}</div>}
             {error && <div className="alert alert-danger">{error}</div>}
 
             <form onSubmit={handleSubmit}>
-              <div className="mb-3">
-                <label className="form-label fw-semibold">Email</label>
-                <input
-                  type="email"
-                  className="form-control form-control-lg"
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
-              </div>
+              <input
+                type="email"
+                className="form-control form-control-lg mb-3"
+                placeholder="Enter email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
 
-              <button
-                type="submit"
-                className="btn btn-primary w-100"
-                disabled={loading}
-              >
+              <button className="btn btn-primary w-100" disabled={loading}>
                 {loading ? "Sending..." : "Send Reset Link"}
               </button>
             </form>
+
+            <div className="text-center mt-3">
+              <span
+                className="text-primary"
+                style={{ cursor: "pointer" }}
+                onClick={() => navigate(-1)}
+              >
+                Back to Login
+              </span>
+            </div>
           </div>
         </div>
       </div>
